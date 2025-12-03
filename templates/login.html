@@ -1,0 +1,36 @@
+{% extends 'base.html' %}
+{% block title %}Login - Lumina Beauty{% endblock %}
+{% block content %}
+    <div class="container my-5">
+        <div class="row justify-content-center">
+            
+            <div class="col-lg-5">
+                
+                <div class="form-container-card">
+                    <h2 class="form-title mb-4">Faça seu Login</h2>
+                    <form method="POST" action="{{ url_for('login') }}">
+                        <div class="mb-3">
+                            <label for="username" class="form-label">Nome de Usuário</label>
+                            <input type="text" class="form-control" id="username" name="username" placeholder="Digite seu nome de usuário" required>
+                        </div>
+                        <div class="mb-4">
+                            <label for="senha" class="form-label">Senha</label>
+                            <input type="password" class="form-control" id="senha" name="senha" placeholder="Digite sua senha" required>
+                        </div>
+
+                        <div class="text-end mb-3">
+                            <a href="{{ url_for('recuperar_senha') }}" class="form-link">Esqueceu sua senha?</a>
+                        </div>
+                        <button type="submit" class="btn btn-form-submit w-100 mt-3">Entrar</button>
+
+                        <div class="text-center mt-4 form-link-container">
+                            <span>Se ainda não possui uma conta, </span>
+                            <a href="{{ url_for('registrar_cliente') }}" class="form-link">faça seu registro</a> 
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+        </div>
+    </div>
+{% endblock %}

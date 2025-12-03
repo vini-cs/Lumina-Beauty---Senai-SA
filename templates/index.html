@@ -1,0 +1,1561 @@
+{% extends 'base.html' %} {% block title %}Lumina Beauty - A sua loja{% endblock
+%} {% block content %}
+
+<link
+  rel="stylesheet"
+  href="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.css"
+/>
+
+<style>
+  /* --- ESTILOS DO NOVO CARROSSEL (PREMIUM) --- */
+  .swiper {
+    width: 100%;
+    height: 600px; /* Altura fixa para impacto visual */
+    position: relative;
+  }
+
+  .swiper-slide {
+    background-position: center;
+    background-size: cover;
+    overflow: hidden; /* Importante para o efeito de zoom */
+  }
+
+  /* A imagem dentro do slide */
+  .swiper-slide img {
+    display: block;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transition: transform 8s ease; /* Duração do zoom */
+    transform: scale(1);
+  }
+
+  /* O efeito de Zoom quando o slide está ativo */
+  .swiper-slide-active img {
+    transform: scale(1.15); /* Aumenta 15% lentamente */
+  }
+
+  /* Máscara escura para o texto aparecer bem sobre a imagem */
+  .slide-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: linear-gradient(
+      to right,
+      rgba(107, 73, 80, 0.7),
+      transparent 80%
+    );
+    display: flex;
+    align-items: center;
+    padding-left: 10%; /* Recuo do texto */
+    z-index: 2;
+  }
+
+  /* Texto do Slide */
+  .slide-content {
+    color: #fff;
+    max-width: 600px;
+    opacity: 0;
+    transform: translateY(30px);
+    transition: all 1s ease 0.5s; /* Delay para entrar depois da imagem */
+  }
+
+  .swiper-slide-active .slide-content {
+    opacity: 1;
+    transform: translateY(0);
+  }
+
+  .slide-content h1 {
+    font-size: 3.5rem;
+    font-weight: 700;
+    margin-bottom: 1rem;
+    text-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+  }
+
+  .slide-content p {
+    font-size: 1.2rem;
+    margin-bottom: 2rem;
+    text-shadow: 0 2px 5px rgba(0, 0, 0, 0.3);
+  }
+
+  /* Personalizando as Cores do Swiper para a Marca */
+  .swiper-pagination-bullet {
+    background: #fff;
+    opacity: 0.5;
+    width: 12px;
+    height: 12px;
+  }
+  .swiper-pagination-bullet-active {
+    background: var(--primary-color) !important;
+    opacity: 1;
+    width: 30px; /* Vira um traço */
+    border-radius: 5px;
+    transition: width 0.3s;
+  }
+
+  .swiper-button-next,
+  .swiper-button-prev {
+    color: #fff;
+    background: rgba(255, 255, 255, 0.1);
+    width: 50px;
+    height: 50px;
+    border-radius: 50%;
+    backdrop-filter: blur(5px);
+    transition: 0.3s;
+  }
+  .swiper-button-next:hover,
+  .swiper-button-prev:hover {
+    background: var(--primary-color);
+  }
+  .swiper-button-next:after,
+  .swiper-button-prev:after {
+    font-size: 1.2rem;
+    font-weight: bold;
+  }
+
+  /* --- ESTILOS DA BUSCA --- */
+  .search-section {
+    background: transparent !important;
+    border: none !important;
+    padding: 1rem 0 3rem 0;
+  }
+  .search-container {
+    position: relative;
+    max-width: 700px;
+    margin: 0 auto;
+  }
+  .search-input-wrapper {
+    position: relative;
+    display: flex;
+    align-items: center;
+  }
+  .search-input {
+    width: 100%;
+    height: 55px;
+    padding: 10px 25px;
+    padding-right: 50px;
+    font-size: 1.1rem;
+    background-color: #fff;
+    border: 1px solid #e0e0e0;
+    border-radius: 50px;
+    box-shadow: 0 5px 15px rgba(107, 73, 80, 0.1);
+    outline: none;
+    transition: all 0.3s ease;
+  }
+  .search-input:focus {
+    border-color: var(--primary-color);
+    box-shadow: 0 5px 20px rgba(107, 73, 80, 0.2);
+    transform: translateY(-2px);
+  }
+  .search-icon {
+    position: absolute;
+    right: 25px;
+    color: var(--primary-color);
+    font-size: 1.3rem;
+    pointer-events: none;
+  }
+
+  /* DROPDOWN */
+  .search-results-dropdown {
+    position: absolute;
+    top: 115%;
+    left: 0;
+    right: 0;
+    background: white;
+    border-radius: 20px;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1);
+    z-index: 1000;
+    opacity: 0;
+    visibility: hidden;
+    transform: translateY(-10px);
+    transition: all 0.3s ease;
+    max-height: 400px;
+    overflow-y: auto;
+    border: 1px solid #f0f0f0;
+    padding: 10px 0;
+  }
+  .search-results-dropdown.active {
+    opacity: 1;
+    visibility: visible;
+    transform: translateY(0);
+  }
+  .search-result-item {
+    display: flex;
+    align-items: center;
+    padding: 15px 25px;
+    border-bottom: 1px solid #f8f8f8;
+    text-decoration: none;
+    color: var(--text-color);
+    transition: background 0.2s;
+    cursor: pointer;
+  }
+  .search-result-item:hover {
+    background-color: #fff0f3;
+  }
+
+  .result-thumb {
+    width: 50px;
+    height: 50px;
+    object-fit: cover;
+    border-radius: 10px;
+    margin-right: 15px;
+    border: 1px solid #eee;
+    background: linear-gradient(135deg, #f5e6e8 0%, #fce4ec 100%);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.5rem;
+    color: var(--primary-color);
+  }
+
+  .result-thumb img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    border-radius: 10px;
+  }
+
+  .result-info h6 {
+    margin: 0;
+    font-weight: 700;
+    font-size: 1rem;
+  }
+  .result-info small {
+    color: #888;
+    font-size: 0.85rem;
+    text-transform: capitalize;
+  }
+  .result-price {
+    margin-left: auto;
+    font-weight: 700;
+    color: var(--primary-color);
+  }
+
+  .no-results-box {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 40px 20px;
+    text-align: center;
+    color: #999;
+  }
+  .no-results-box i {
+    font-size: 2.5rem;
+    color: var(--primary-color);
+    opacity: 0.5;
+    margin-bottom: 10px;
+  }
+
+  /* Scrollbar */
+  .search-results-dropdown::-webkit-scrollbar {
+    width: 8px;
+  }
+  .search-results-dropdown::-webkit-scrollbar-track {
+    background: #fff0f3;
+    border-radius: 0 20px 20px 0;
+    margin: 10px;
+  }
+  .search-results-dropdown::-webkit-scrollbar-thumb {
+    background-color: #e8b8c2;
+    border-radius: 20px;
+    border: 2px solid #fff0f3;
+  }
+
+  /* --- PLACEHOLDER DE IMAGEM PARA CATEGORIAS E PRODUTOS --- */
+  .category-image-placeholder,
+  .product-image-placeholder {
+    width: 100%;
+    height: 200px;
+    background: linear-gradient(135deg, #f5e6e8 0%, #fce4ec 100%);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 3rem;
+    color: var(--primary-color);
+    border-radius: 8px 8px 0 0;
+    overflow: hidden;
+    position: relative;
+  }
+
+  .category-image-placeholder img,
+  .product-image-placeholder img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    position: absolute;
+    top: 0;
+    left: 0;
+  }
+
+  .category-image-placeholder i,
+  .product-image-placeholder i {
+    font-size: 3rem;
+    position: relative;
+    z-index: 1;
+    display: block;
+  }
+
+  .category-img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    position: absolute;
+    top: 0;
+    left: 0;
+    display: none;
+  }
+
+  /* Classe para imagem de categoria */
+  .category-icon-wrapper img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover; /* Faz a imagem cobrir todo o espaço sem esticar */
+    border-radius: 50%; /* Garante que a imagem fique redonda */
+    display: block;
+  }
+
+  /* Remove o fundo rosa/dourado se tiver imagem (opcional, para ficar mais limpo) */
+  .category-card:has(img) .category-icon-wrapper {
+    background: transparent;
+    border: 2px solid var(--gold-color); /* Borda fina para acabamento */
+    padding: 0; /* Remove espaçamento interno */
+    overflow: hidden; /* Garante que a imagem não vaze */
+  }
+
+  @media (max-width: 768px) {
+    .slide-content h1 {
+      font-size: 2rem;
+    }
+    .swiper {
+      height: 400px;
+    }
+  }
+
+  :root {
+    --primary-color: #e8b8c2;
+    --secondary-color: #f9f0f2;
+    --text-color: #6b4950;
+    --dark-accent: #8c5b65;
+    --gold-color: #c9a87c;
+    --white-color: #f2f2f2;
+    --soft-nude: #e0d0d4;
+    --deep-dark: #2d1b1e;
+    --light-bg: #fefcfd;
+  }
+
+  * {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+  }
+
+  body {
+    font-family: "Quicksand", sans-serif;
+    background-color: var(--light-bg);
+  }
+
+  /* ===== FOOTER ===== */
+  .footer {
+    background: linear-gradient(135deg, var(--deep-dark) 0%, #3d262b 100%);
+    color: var(--white-color);
+    padding: 80px 0 0;
+    margin-top: 120px;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .footer::before {
+    content: "";
+    position: absolute;
+    top: -50%;
+    right: -10%;
+    width: 600px;
+    height: 600px;
+    background: rgba(201, 168, 124, 0.05);
+    border-radius: 50%;
+  }
+
+  /* ===== FOOTER CONTENT ===== */
+  .footer-content {
+    position: relative;
+    z-index: 2;
+    padding-bottom: 60px;
+  }
+
+  .footer-section {
+    margin-bottom: 3rem;
+  }
+
+  .footer-section h5 {
+    font-size: 1.1rem;
+    font-weight: 800;
+    color: var(--gold-color);
+    margin-bottom: 1.5rem;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    position: relative;
+    display: inline-block;
+  }
+
+  .footer-section h5::after {
+    content: "";
+    position: absolute;
+    bottom: -8px;
+    left: 0;
+    width: 40px;
+    height: 2px;
+    background: var(--primary-color);
+  }
+
+  /* ===== FOOTER LINKS ===== */
+  .footer-links {
+    list-style: none;
+    margin-top: 1.5rem;
+  }
+
+  .footer-links li {
+    margin-bottom: 12px;
+    transition: all 0.3s ease;
+  }
+
+  .footer-links a {
+    color: rgba(242, 242, 242, 0.8);
+    text-decoration: none;
+    font-size: 0.95rem;
+    font-weight: 500;
+    transition: all 0.3s ease;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .footer-links a:hover {
+    color: var(--gold-color);
+    transform: translateX(8px);
+  }
+
+  .footer-links i {
+    width: 20px;
+    opacity: 0;
+    transition: all 0.3s ease;
+  }
+
+  .footer-links a:hover i {
+    opacity: 1;
+  }
+
+  /* ===== FOOTER ABOUT ===== */
+  .footer-about {
+    max-width: 350px;
+  }
+
+  .footer-about h4 {
+    font-size: 1.6rem;
+    font-weight: 800;
+    color: var(--primary-color);
+    margin-bottom: 1rem;
+    letter-spacing: -0.5px;
+  }
+
+  .footer-about p {
+    font-size: 0.95rem;
+    line-height: 1.8;
+    color: rgba(242, 242, 242, 0.85);
+    margin-bottom: 1.5rem;
+  }
+
+  /* ===== SOCIAL ICONS ===== */
+  .footer-social {
+    display: flex;
+    gap: 15px;
+    margin-top: 2rem;
+  }
+
+  .social-icon {
+    width: 45px;
+    height: 45px;
+    border-radius: 50%;
+    background: rgba(201, 168, 124, 0.15);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--gold-color);
+    text-decoration: none;
+    font-size: 1.2rem;
+    transition: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+    border: 1px solid rgba(201, 168, 124, 0.3);
+  }
+
+  .social-icon:hover {
+    background: var(--primary-color);
+    color: var(--deep-dark);
+    transform: translateY(-8px) scale(1.1);
+    border-color: var(--primary-color);
+    box-shadow: 0 10px 30px rgba(201, 168, 124, 0.3);
+  }
+
+  /* ===== NEWSLETTER ===== */
+  .newsletter-form {
+    margin-top: 2rem;
+  }
+
+  .newsletter-form p {
+    font-size: 0.9rem;
+    color: rgba(242, 242, 242, 0.7);
+    margin-bottom: 1rem;
+    font-weight: 500;
+  }
+
+  .newsletter-input-group {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 1rem;
+  }
+
+  .newsletter-input-group input {
+    flex: 1;
+    background: rgba(242, 242, 242, 0.1);
+    border: 1px solid rgba(201, 168, 124, 0.3);
+    color: var(--white-color);
+    padding: 12px 16px;
+    border-radius: 8px;
+    font-size: 0.9rem;
+    font-family: inherit;
+    transition: all 0.3s ease;
+  }
+
+  .newsletter-input-group input::placeholder {
+    color: rgba(242, 242, 242, 0.5);
+  }
+
+  .newsletter-input-group input:focus {
+    outline: none;
+    background: rgba(242, 242, 242, 0.15);
+    border-color: var(--gold-color);
+    box-shadow: 0 0 0 2px rgba(201, 168, 124, 0.2);
+  }
+
+  .newsletter-input-group button {
+    background: var(--primary-color);
+    border: none;
+    color: var(--deep-dark);
+    padding: 12px 24px;
+    border-radius: 8px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    font-size: 0.9rem;
+  }
+
+  .newsletter-input-group button:hover {
+    background: var(--gold-color);
+    transform: translateY(-2px);
+    box-shadow: 0 5px 15px rgba(201, 168, 124, 0.4);
+  }
+
+  /* ===== FOOTER INFO CARDS ===== */
+  .footer-info-card {
+    background: rgba(242, 242, 242, 0.05);
+    border: 1px solid rgba(201, 168, 124, 0.2);
+    border-radius: 12px;
+    padding: 20px;
+    transition: all 0.3s ease;
+    margin-bottom: 15px;
+  }
+
+  .footer-info-card:hover {
+    background: rgba(242, 242, 242, 0.08);
+    border-color: var(--gold-color);
+    transform: translateY(-3px);
+  }
+
+  .footer-info-card-icon {
+    width: 40px;
+    height: 40px;
+    background: var(--primary-color);
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--deep-dark);
+    font-size: 1.2rem;
+    margin-bottom: 12px;
+  }
+
+  .footer-info-card h6 {
+    font-size: 0.95rem;
+    font-weight: 700;
+    color: var(--gold-color);
+    margin-bottom: 5px;
+    letter-spacing: 0.5px;
+  }
+
+  .footer-info-card p {
+    font-size: 0.85rem;
+    color: rgba(242, 242, 242, 0.75);
+    margin: 0;
+    line-height: 1.5;
+  }
+
+  /* ===== PAYMENT METHODS ===== */
+  .payment-methods {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+    margin-top: 1.5rem;
+  }
+
+  .payment-badge {
+    background: rgba(242, 242, 242, 0.1);
+    border: 1px solid rgba(201, 168, 124, 0.2);
+    padding: 8px 12px;
+    border-radius: 6px;
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: rgba(242, 242, 242, 0.8);
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    transition: all 0.3s ease;
+  }
+
+  .payment-badge:hover {
+    background: rgba(201, 168, 124, 0.15);
+    border-color: var(--gold-color);
+    color: var(--gold-color);
+  }
+
+  .payment-badge i {
+    font-size: 1rem;
+  }
+
+  /* ===== FOOTER DIVIDER ===== */
+  .footer-divider {
+    height: 1px;
+    background: linear-gradient(
+      90deg,
+      transparent,
+      rgba(201, 168, 124, 0.3),
+      transparent
+    );
+    margin: 40px 0;
+  }
+
+  /* ===== FOOTER BOTTOM ===== */
+  .footer-bottom {
+    background: rgba(0, 0, 0, 0.3);
+    border-top: 1px solid rgba(201, 168, 124, 0.2);
+    padding: 30px 0;
+    position: relative;
+    z-index: 2;
+  }
+
+  .footer-bottom-content {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 30px;
+    align-items: center;
+  }
+
+  .footer-bottom-left {
+    font-size: 0.9rem;
+    color: rgba(242, 242, 242, 0.7);
+    font-weight: 500;
+  }
+
+  .footer-bottom-left a {
+    color: var(--gold-color);
+    text-decoration: none;
+    transition: color 0.3s ease;
+  }
+
+  .footer-bottom-left a:hover {
+    color: var(--primary-color);
+  }
+
+  .footer-bottom-center {
+    text-align: center;
+    font-size: 0.85rem;
+    color: rgba(242, 242, 242, 0.6);
+    font-weight: 500;
+  }
+
+  .footer-bottom-right {
+    display: flex;
+    gap: 20px;
+    justify-content: flex-end;
+    flex-wrap: wrap;
+  }
+
+  .footer-link-badge {
+    background: rgba(242, 242, 242, 0.08);
+    padding: 8px 16px;
+    border-radius: 20px;
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: rgba(242, 242, 242, 0.8);
+    text-decoration: none;
+    transition: all 0.3s ease;
+    border: 1px solid rgba(201, 168, 124, 0.2);
+  }
+
+  .footer-link-badge:hover {
+    background: var(--primary-color);
+    color: var(--deep-dark);
+    border-color: var(--primary-color);
+  }
+
+  /* ===== SCROLL TO TOP BUTTON ===== */
+  .scroll-to-top {
+    position: fixed;
+    bottom: 30px;
+    right: 30px;
+    width: 50px;
+    height: 50px;
+    background: var(--primary-color);
+    border: none;
+    border-radius: 50%;
+    color: white;
+    font-size: 1.5rem;
+    cursor: pointer;
+    opacity: 0;
+    visibility: hidden;
+    transition: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+    z-index: 999;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .scroll-to-top.show {
+    opacity: 1;
+    visibility: visible;
+    bottom: 50px;
+  }
+
+  .scroll-to-top:hover {
+    background: var(--gold-color);
+    transform: translateY(-5px);
+    box-shadow: 0 10px 30px rgba(201, 168, 124, 0.4);
+  }
+
+  /* ===== RESPONSIVE ===== */
+  @media (max-width: 768px) {
+    .footer {
+      padding: 60px 0 0;
+    }
+
+    .footer-content {
+      padding-bottom: 40px;
+    }
+
+    .footer-bottom-content {
+      grid-template-columns: 1fr;
+      gap: 20px;
+      text-align: center;
+    }
+
+    .footer-bottom-left {
+      text-align: center;
+    }
+
+    .footer-bottom-right {
+      justify-content: center;
+    }
+
+    .footer-about {
+      max-width: 100%;
+      margin-bottom: 2rem;
+    }
+
+    .newsletter-input-group {
+      flex-direction: column;
+    }
+
+    .newsletter-input-group button {
+      width: 100%;
+    }
+  }
+
+  @media (max-width: 576px) {
+    .scroll-to-top {
+      width: 45px;
+      height: 45px;
+      font-size: 1.2rem;
+      bottom: 20px;
+      right: 20px;
+    }
+
+    .scroll-to-top.show {
+      bottom: 30px;
+    }
+
+    .footer-social {
+      gap: 12px;
+    }
+
+    .social-icon {
+      width: 40px;
+      height: 40px;
+      font-size: 1rem;
+    }
+  }
+
+  /* ===== ANIMAÇÕES ===== */
+  @keyframes slideUp {
+    from {
+      opacity: 0;
+      transform: translateY(30px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  .footer-section {
+    animation: slideUp 0.6s ease-out forwards;
+  }
+
+  .footer-section:nth-child(1) {
+    animation-delay: 0.1s;
+  }
+  .footer-section:nth-child(2) {
+    animation-delay: 0.2s;
+  }
+  .footer-section:nth-child(3) {
+    animation-delay: 0.3s;
+  }
+  .footer-section:nth-child(4) {
+    animation-delay: 0.4s;
+  }
+
+  .product-card-img-container {
+    height: 174px;
+    width: 320px;
+    overflow: hidden;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background-color: #fff;
+    border-bottom: 1px solid #eee;
+  }
+
+  .product-card-img-container img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover; /* Garante que sua imagem 'Sem Foto' apareça inteira */
+  }
+</style>
+
+<div class="swiper mySwiper">
+  <div class="swiper-wrapper">
+    
+    <!-- SLIDE 1: Beleza Natural / Skincare -->
+    <div class="swiper-slide">
+      <img
+        src="https://images.unsplash.com/photo-1522335789203-aabd1fc54bc9?q=80&w=1600&auto=format&fit=crop"
+        alt="Beleza Natural"
+      />
+      <div class="slide-overlay">
+        <div class="slide-content">
+          <h1>Realce sua<br />Beleza Única</h1>
+          <p>Descubra produtos que valorizam quem você realmente é.</p>
+          <a href="#produtos" class="btn btn-primary btn-lg">Ver Coleção</a>
+        </div>
+      </div>
+    </div>
+
+    <!-- SLIDE 2: Skincare / Cuidados com a Pele -->
+    <div class="swiper-slide">
+      <img
+        src="https://images.unsplash.com/photo-1570172619644-dfd03ed5d881?q=80&w=1600&auto=format&fit=crop"
+        alt="Skincare"
+      />
+      <div class="slide-overlay">
+        <div class="slide-content">
+          <h1>Cuidado que<br />Transforma</h1>
+          <p>A melhor linha de skincare para uma pele radiante todos os dias.</p>
+          
+            <a href="{{ url_for('categoria_produtos', nome_categoria='skincare') }}"
+            class="btn btn-primary btn-lg"
+            >Ver Skincare</a>
+
+        </div>
+      </div>
+    </div>
+
+    <!-- SLIDE 3: Maquiagem / Lábios -->
+    <div class="swiper-slide">
+      <img
+        src="https://images.unsplash.com/photo-1512496015851-a90fb38ba796?q=80&w=1600&auto=format&fit=crop"
+        alt="Maquiagem Premium"
+      />
+      <div class="slide-overlay">
+        <div class="slide-content">
+          <h1>Lançamentos<br />Exclusivos</h1>
+          <p>As tendências mais quentes do momento acabaram de chegar.</p>
+          
+            <a href="{{ url_for('categoria_produtos', nome_categoria='labios') }}"
+            class="btn btn-primary btn-lg">Ver Lançamentos</a>
+
+        </div>
+      </div>
+    </div>
+
+    <!-- SLIDE 4 (OPCIONAL): Pincéis / Ferramentas -->
+    <div class="swiper-slide">
+      <img
+        src="https://images.pexels.com/photos/2533266/pexels-photo-2533266.jpeg?auto=compress&cs=tinysrgb&w=1920&h=1080&dpr=1"
+        alt="Pincéis Profissionais"
+      />
+      <div class="slide-overlay">
+        <div class="slide-content">
+          <h1>Ferramentas<br />Profissionais</h1>
+          <p>Pincéis de alta qualidade para uma aplicação impecável.</p>
+          
+            <a href="{{ url_for('categoria_produtos', nome_categoria='pinceis') }}"
+            class="btn btn-primary btn-lg">Ver Pincéis</a>
+        </div>
+      </div>
+    </div>
+
+  </div>
+  <div class="swiper-button-next"></div>
+  <div class="swiper-button-prev"></div>
+  <div class="swiper-pagination"></div>
+</div>
+
+<div class="container my-5 feature-section">
+  <div class="row text-center g-4">
+    <div class="col-md-4">
+      <div class="feature-block">
+        <div class="feature-icon"><i class="bi bi-truck"></i></div>
+        <h5 class="mt-3">FRETE GRÁTIS</h5>
+        <p>Em compras acima de R$ 250,00.</p>
+      </div>
+    </div>
+    <div class="col-md-4">
+      <div class="feature-block">
+        <div class="feature-icon"><i class="bi bi-shield-check"></i></div>
+        <h5 class="mt-3">PAGAMENTO SEGURO</h5>
+        <p>Seus dados protegidos.</p>
+      </div>
+    </div>
+    <div class="col-md-4">
+      <div class="feature-block">
+        <div class="feature-icon"><i class="bi bi-gem"></i></div>
+        <h5 class="mt-3">QUALIDADE</h5>
+        <p>Melhores marcas do mercado.</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="search-section">
+  <div class="container">
+    <div class="search-container">
+      <div class="search-input-wrapper">
+        <input
+          type="text"
+          id="product-search"
+          class="search-input"
+          placeholder="O que você procura hoje? (ex: batom, pó...)"
+        />
+      </div>
+      <div id="search-results" class="search-results-dropdown"></div>
+    </div>
+  </div>
+</div>
+
+<div class="container my-5" id="categorias">
+  <h2 class="text-center mb-4 section-title"><span>Nossas Categorias</span></h2>
+  <div class="row g-4 justify-content-center">
+    <div class="col-md-6 col-lg-3">
+      <div class="card category-card h-100">
+        <a
+          href="{{ url_for('categoria_produtos', nome_categoria='rosto') }}"
+          class="text-decoration-none text-dark"
+        >
+          <div class="category-image-placeholder category-img-loader">
+            <img
+              src="{{ url_for('static', filename='images/sombra1.png') }}"
+              alt="Rosto"
+              class="category-img"
+            />
+            <i class="bi bi-sun category-icon"></i>
+          </div>
+          <div class="card-body text-center d-flex flex-column">
+            <h5 class="card-title mt-2">Rosto</h5>
+            <p class="card-text text-muted small">
+              Bases, pós, blushes e tudo para uma pele perfeita.
+            </p>
+            <span class="btn btn-primary btn-sm mt-auto w-100"
+              >Ver Produtos</span
+            >
+          </div>
+        </a>
+      </div>
+    </div>
+
+    <div class="col-md-6 col-lg-3">
+      <div class="card category-card h-100">
+        <a
+          href="{{ url_for('categoria_produtos', nome_categoria='labios') }}"
+          class="text-decoration-none text-dark"
+        >
+          <div class="category-image-placeholder category-img-loader">
+            <img
+              src="{{ url_for('static', filename='images/sombra2.png') }}"
+              alt="Lábios"
+              class="category-img"
+            />
+            <i class="bi bi-heart category-icon"></i>
+          </div>
+          <div class="card-body text-center d-flex flex-column">
+            <h5 class="card-title mt-2">Lábios</h5>
+            <p class="card-text text-muted small">
+              Batons matte, cremosos, gloss e lápis labiais.
+            </p>
+            <span class="btn btn-primary btn-sm mt-auto w-100"
+              >Ver Produtos</span
+            >
+          </div>
+        </a>
+      </div>
+    </div>
+
+    <div class="col-md-6 col-lg-3">
+      <div class="card category-card h-100">
+        <a
+          href="{{ url_for('categoria_produtos', nome_categoria='olhos') }}"
+          class="text-decoration-none text-dark"
+        >
+          <div class="category-image-placeholder category-img-loader">
+            <img
+              src="{{ url_for('static', filename='images/sombra3.png') }}"
+              alt="Olhos"
+              class="category-img"
+            />
+            <i class="bi bi-eye category-icon"></i>
+          </div>
+          <div class="card-body text-center d-flex flex-column">
+            <h5 class="card-title mt-2">Olhos</h5>
+            <p class="card-text text-muted small">
+              Paletas, máscaras de cílios e delineadores.
+            </p>
+            <span class="btn btn-primary btn-sm mt-auto w-100"
+              >Ver Produtos</span
+            >
+          </div>
+        </a>
+      </div>
+    </div>
+
+    <div class="col-md-6 col-lg-3">
+      <div class="card category-card h-100">
+        <a
+          href="{{ url_for('categoria_produtos', nome_categoria='kits') }}"
+          class="text-decoration-none text-dark"
+        >
+          <div class="category-image-placeholder category-img-loader">
+            <img
+              src="{{ url_for('static', filename='images/sombra4.png') }}"
+              alt="Kits"
+              class="category-img"
+            />
+            <i class="bi bi-gift category-icon"></i>
+          </div>
+          <div class="card-body text-center d-flex flex-column">
+            <h5 class="card-title mt-2">Kits</h5>
+            <p class="card-text text-muted small">
+              Combinações perfeitas e kits de presente.
+            </p>
+            <span class="btn btn-primary btn-sm mt-auto w-100"
+              >Ver Produtos</span
+            >
+          </div>
+        </a>
+      </div>
+    </div>
+
+    <div class="col-md-6 col-lg-3">
+      <div class="card category-card h-100">
+        <a
+          href="{{ url_for('categoria_produtos', nome_categoria='pinceis') }}"
+          class="text-decoration-none text-dark"
+        >
+          <div class="category-image-placeholder category-img-loader">
+            <img
+              src="{{ url_for('static', filename='images/sombra5.png') }}"
+              alt="Pincéis"
+              class="category-img"
+            />
+            <i class="bi bi-brush category-icon"></i>
+          </div>
+          <div class="card-body text-center d-flex flex-column">
+            <h5 class="card-title mt-2">Pincéis</h5>
+            <p class="card-text text-muted small">
+              Pincéis profissionais para aplicação perfeita.
+            </p>
+            <span class="btn btn-primary btn-sm mt-auto w-100"
+              >Ver Produtos</span
+            >
+          </div>
+        </a>
+      </div>
+    </div>
+
+    <div class="col-md-6 col-lg-3">
+      <div class="card category-card h-100">
+        <a
+          href="{{ url_for('categoria_produtos', nome_categoria='skincare') }}"
+          class="text-decoration-none text-dark"
+        >
+          <div class="category-image-placeholder category-img-loader">
+            <img
+              src="{{ url_for('static', filename='images/sombra6.png') }}"
+              alt="Skincare"
+              class="category-img"
+            />
+            <i class="bi bi-droplet category-icon"></i>
+          </div>
+          <div class="card-body text-center d-flex flex-column">
+            <h5 class="card-title mt-2">Skincare</h5>
+            <p class="card-text text-muted small">
+              Cremes, tônicos e sérum para cuidado da pele.
+            </p>
+            <span class="btn btn-primary btn-sm mt-auto w-100"
+              >Ver Produtos</span
+            >
+          </div>
+        </a>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="container my-5" id="produtos">
+  <h2 class="text-center mb-4 section-title"><span>Nossos Produtos</span></h2>
+  <div class="row g-4">
+    {% for produto in produtos %}
+    <div class="col-md-6 col-lg-3">
+      <div class="card category-card h-100">
+        <a
+          href="{{ url_for('ver_produto', id=produto.id) }}"
+          class="text-decoration-none"
+        >
+        <div class="product-card-img-container">
+          {% if produto.imagem 
+              and 'placeholder.com' not in produto.imagem 
+              and 'placehold.co' not in produto.imagem 
+              and 'https://placehold.co/400x300/E0D0D4/6B4950?text=Sem+Imagem' not in produto.imagem
+          %}
+        
+              <img src="{{ produto.imagem }}" 
+                  class="card-img-top" 
+                  alt="{{ produto.nome }}"
+                  onerror="this.onerror=null; this.src='https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQwDoSndS2IEwkdfPqUMW1AOmu9jPaW94WIbmR37Ffyf7TRnWCuRA94U9bM2eJViBxt3yc&usqp=CAU';">
+        
+          {% else %}
+        
+              <img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQwDoSndS2IEwkdfPqUMW1AOmu9jPaW94WIbmR37Ffyf7TRnWCuRA94U9bM2eJViBxt3yc&usqp=CAU" 
+              class="card-img-top placeholder-img" 
+              alt="Imagem do Produto">
+           
+          {% endif %}
+        </div>
+        </a>
+
+        <div class="card-body d-flex flex-column">
+          <h5 class="card-title">{{ produto.nome }}</h5>
+          <p class="card-text text-muted small">{{ produto.descricao }}</p>
+          <p class="card-price">R$ {{ "%.2f"|format(produto.preco) }}</p>
+          <div class="card-buttons mt-auto">
+            <a
+              href="{{ url_for('ver_produto', id=produto.id) }}"
+              class="btn btn-primary w-100"
+            >
+              Ver Detalhes
+            </a>
+          </div>
+        </div>
+      </div>
+    </div>
+    {% else %}
+    <div class="col-12">
+      <p class="text-center">Nenhum produto cadastrado no momento.</p>
+    </div>
+    {% endfor %}
+  </div>
+</div>
+
+{% endblock %} {% block scripts %}
+<script src="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.js"></script>
+
+<script>
+  // 1. INICIALIZAÇÃO DO CARROSSEL (SWIPER)
+  var swiper = new Swiper(".mySwiper", {
+    spaceBetween: 0,
+    centeredSlides: true,
+    effect: "fade", // Efeito de esmaecer (mais elegante)
+    speed: 1000, // Transição lenta de 1 segundo
+    fadeEffect: {
+      crossFade: true,
+    },
+    autoplay: {
+      delay: 5000, // Troca a cada 5 segundos
+      disableOnInteraction: false,
+    },
+    pagination: {
+      el: ".swiper-pagination",
+      clickable: true,
+    },
+    navigation: {
+      nextEl: ".swiper-button-next",
+      prevEl: ".swiper-button-prev",
+    },
+  });
+
+  // 2. SCRIPT DE BUSCA
+  document.addEventListener("DOMContentLoaded", function () {
+    // ===== CARREGADOR DE IMAGENS DE CATEGORIAS =====
+    const categoryLoaders = document.querySelectorAll(".category-img-loader");
+    categoryLoaders.forEach((loader) => {
+      const img = loader.querySelector(".category-img");
+      const iconElement = loader.querySelector(".category-icon");
+
+      if (!img || !iconElement) return;
+
+      // Testa se a imagem existe
+      const testImg = new Image();
+      testImg.onload = function () {
+        // Imagem existe, mostra ela e esconde o ícone
+        img.style.display = "block";
+        iconElement.style.display = "none";
+      };
+      testImg.onerror = function () {
+        // Imagem não existe, mantém o ícone visível
+        img.style.display = "none";
+        iconElement.style.display = "block";
+      };
+      testImg.src = img.src;
+    });
+
+     // ===== SCRIPT DE BUSCA =====
+     const searchInput = document.getElementById("product-search");
+    const resultsDropdown = document.getElementById("search-results");
+    const nomesCategorias = {
+      labios: "Lábios",
+      pinceis: "Pincéis",
+      olhos: "Olhos",
+      rosto: "Rosto",
+      skincare: "Skincare",
+      kits: "Kits",
+    };
+    const categoriasIcones = {
+      labios: "bi-lips",
+      pinceis: "bi-brush",
+      olhos: "bi-eye",
+      rosto: "bi-face-mask",
+      skincare: "bi-droplet",
+      kits: "bi-gift",
+    };
+    
+    // URL da imagem padrão (a imagem do blush que você forneceu)
+    const DEFAULT_IMAGE = "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQwDoSndS2IEwkdfPqUMW1AOmu9jPaW94WIbmR37Ffyf7TRnWCuRA94U9bM2eJViBxt3yc&usqp=CAU";
+    
+    let debounceTimer;
+
+    // Função para verificar se uma imagem é válida
+    function isValidImage(imgUrl) {
+      if (!imgUrl || imgUrl.trim() === '') return false;
+      
+      const invalidPatterns = [
+        'placeholder.com',
+        'placehold.co',
+        'Sem+Imagem',
+        'sem_foto',
+        'placeholder'
+      ];
+      
+      return !invalidPatterns.some(pattern => imgUrl.includes(pattern));
+    }
+
+    searchInput.addEventListener("input", function () {
+      const query = this.value.trim();
+      clearTimeout(debounceTimer);
+
+      if (query.length === 0) {
+        resultsDropdown.classList.remove("active");
+        return;
+      }
+
+      debounceTimer = setTimeout(() => {
+        fetch(`/api/buscar_produtos?q=${encodeURIComponent(query)}`)
+          .then((response) => response.json())
+          .then((products) => {
+            resultsDropdown.innerHTML = "";
+            if (products.length > 0) {
+              products.forEach((p) => {
+                const item = document.createElement("a");
+                item.href = `/produto/${p.id}`;
+                item.className = "search-result-item";
+                const categoriaBonita =
+                  nomesCategorias[p.categoria] || p.categoria;
+                const icone = categoriasIcones[p.categoria] || "bi-box-seam";
+
+                // Determina qual imagem usar
+                let imageToUse = DEFAULT_IMAGE;
+                if (isValidImage(p.imagem)) {
+                  imageToUse = p.imagem;
+                }
+
+                item.innerHTML = `
+                  <div class="result-thumb">
+                    <img src="${imageToUse}" alt="${p.nome}" 
+                         onerror="this.onerror=null; this.src='${DEFAULT_IMAGE}';">
+                  </div>
+                  <div class="result-info">
+                    <h6>${p.nome}</h6>
+                    <small>${categoriaBonita}</small>
+                  </div>
+                  <div class="result-price">R$ ${p.preco.toFixed(2)}</div>
+                `;
+                
+                resultsDropdown.appendChild(item);
+              });
+            } else {
+              resultsDropdown.innerHTML = `
+                <div class="no-results-box">
+                  <i class="bi bi-emoji-frown"></i>
+                  <span>Poxa, não encontramos nada com esse nome.</span>
+                </div>
+              `;
+            }
+            resultsDropdown.classList.add("active");
+          })
+          .catch((err) => console.error("Erro na busca:", err));
+      }, 300);
+    });
+
+    document.addEventListener("click", function (e) {
+      if (
+        !searchInput.contains(e.target) &&
+        !resultsDropdown.contains(e.target)
+      ) {
+        resultsDropdown.classList.remove("active");
+      }
+    });
+
+    function testImageUrl(url, callback) {
+      const img = new Image();
+      img.onload = () => callback(true);
+      img.onerror = () => callback(false);
+      img.src = url;
+    }
+  });
+
+    
+</script>
+<footer class="footer">
+  <div class="container">
+    <!-- FOOTER CONTENT -->
+    <div class="footer-content">
+      <div class="row">
+        <!-- SOBRE LUMINA -->
+        <div class="col-lg-3 col-md-6">
+          <div class="footer-section footer-about">
+            <h4>Lumina Beauty</h4>
+            <p>
+              Transformando vidas através da beleza autêntica e inovação
+              cosmética desde 1997. Seu brilho é nossa missão.
+            </p>
+
+            <div class="footer-social">
+              <a
+                href="https://www.instagram.com/"
+                class="social-icon"
+                title="Instagram"
+              >
+                <i class="bi bi-instagram"></i>
+              </a>
+              <a
+                href="https://www.facebook.com/"
+                class="social-icon"
+                title="Facebook"
+              >
+                <i class="bi bi-facebook"></i>
+              </a>
+              <a
+                href="https://www.tiktok.com/"
+                class="social-icon"
+                title="TikTok"
+              >
+                <i class="bi bi-tiktok"></i>
+              </a>
+              <a
+                href="https://www.youtube.com/"
+                class="social-icon"
+                title="YouTube"
+              >
+                <i class="bi bi-youtube"></i>
+              </a>
+            </div>
+          </div>
+        </div>
+
+        <!-- NAVEGAÇÃO -->
+        <div class="col-lg-3 col-md-6">
+          <div class="footer-section">
+            <h5>Navegação</h5>
+            <ul class="footer-links">
+              <li>
+                <a href="{{ url_for('index') }}"
+                  ><i class="bi bi-chevron-right"></i>Home</a
+                >
+              </li>
+              <li>
+                <a href="#produtos"
+                  ><i class="bi bi-chevron-right"></i>Produtos</a
+                >
+              </li>
+              <li>
+                <a href="#categorias"
+                  ><i class="bi bi-chevron-right"></i>Categorias</a
+                >
+              </li>
+              <li>
+                <a href="{{ url_for('quiz') }}"
+                  ><i class="bi bi-chevron-right"></i>Quiz</a
+                >
+              </li>
+              <li>
+                <a href="{{ url_for('sobre') }}"
+                  ><i class="bi bi-chevron-right"></i>Sobre Nós</a
+                >
+              </li>
+            </ul>
+          </div>
+        </div>
+
+        <!-- SUPORTE & LEGAL -->
+        <div class="col-lg-3 col-md-6">
+          <div class="footer-section">
+            <h5>Suporte</h5>
+            <ul class="footer-links">
+              <li>
+                <a href="{{ url_for('contato') }}"
+                  ><i class="bi bi-chevron-right"></i>Contato</a
+                >
+              </li>
+              <li>
+                <a href="#"><i class="bi bi-chevron-right"></i>FAQ</a>
+              </li>
+              <li>
+                <a href="#"><i class="bi bi-chevron-right"></i>Rastreamento</a>
+              </li>
+              <li>
+                <a href="#"><i class="bi bi-chevron-right"></i>Devoluções</a>
+              </li>
+              <li>
+                <a href="#"
+                  ><i class="bi bi-chevron-right"></i>Política de Privacidade</a
+                >
+              </li>
+            </ul>
+          </div>
+        </div>
+
+        <!-- CONTATO & NEWSLETTER -->
+        <div class="col-lg-3 col-md-6">
+          <div class="footer-section">
+            <h5>Contato</h5>
+
+            <div class="footer-info-card">
+              <div class="footer-info-card-icon">
+                <i class="bi bi-telephone"></i>
+              </div>
+              <h6>Telefone</h6>
+              <p>(47) 3333-4444</p>
+            </div>
+
+            <div class="footer-info-card">
+              <div class="footer-info-card-icon">
+                <i class="bi bi-envelope"></i>
+              </div>
+              <h6>Email</h6>
+              <p>atendimento@luminabeauty.com</p>
+            </div>
+
+            <div class="footer-info-card">
+              <div class="footer-info-card-icon">
+                <i class="bi bi-pin"></i>
+              </div>
+              <h6>Endereço</h6>
+              <p>Rua da Beleza, 123 - Joinville, SC</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- FOOTER DIVIDER -->
+    <div class="footer-divider"></div>
+
+    <!-- MÉTODOS DE PAGAMENTO -->
+    <div style="margin-bottom: 40px">
+      <h6
+        style="
+          font-size: 0.95rem;
+          font-weight: 700;
+          color: var(--gold-color);
+          margin-bottom: 1rem;
+          letter-spacing: 1px;
+          text-transform: uppercase;
+        "
+      >
+        Formas de Pagamento
+      </h6>
+      <div class="payment-methods">
+        <div class="payment-badge">
+          <i class="bi bi-credit-card"></i> Cartão de Crédito
+        </div>
+        <div class="payment-badge"><i class="bi bi-wallet"></i> PIX</div>
+        <div class="payment-badge">
+          <i class="bi bi-percent"></i> 12x sem juros
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- FOOTER BOTTOM -->
+  <div class="footer-bottom">
+    <div class="container">
+      <div class="footer-bottom-content">
+        <div class="footer-bottom-left">
+          &copy; 2025 <strong>Lumina Beauty</strong>. Todos os direitos
+          reservados. | Desenvolvido com
+          <i class="bi bi-heart-fill" style="color: var(--primary-color)"></i>
+          por nossa equipe
+        </div>
+
+        <div class="footer-bottom-center">
+          <span style="font-size: 0.8rem; opacity: 0.6"
+            >Beleza Autêntica • Inovação • Confiança</span
+          >
+        </div>
+
+        <div class="footer-bottom-right">
+          <a href="#" class="footer-link-badge">Privacidade</a>
+          <a href="#" class="footer-link-badge">Termos</a>
+          <a href="#" class="footer-link-badge">Cookies</a>
+        </div>
+      </div>
+    </div>
+  </div>
+</footer>
+{% endblock %}

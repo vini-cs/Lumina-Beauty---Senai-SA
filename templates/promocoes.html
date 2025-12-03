@@ -1,0 +1,26 @@
+{% extends 'base.html' %}
+{% block title %}Promoções - Lumina Beauty{% endblock %}
+{% block content %}
+    <div class="container my-5 text-center">
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                    <div class="alert alert-{{ category }} alert-dismissible fade show" role="alert">
+                        {{ message }}
+                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                    </div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+
+        <div class="row justify-content-center">
+            <div class="col-md-8">
+                <i class="bi bi-tags-fill" style="font-size: 4rem; color: var(--primary-color);"></i>
+                <h2 class="category-title mt-3">Promoções</h2>
+                <p class="category-subtitle">As melhores ofertas, feitas para si.</p>
+                <p class="mt-4">Nenhuma promoção ativa no momento. Volte em breve para aproveitar descontos exclusivos nos seus produtos favoritos!</p>
+                <a href="{{ url_for('index') }}" class="btn btn-primary mt-3">Ver todos os produtos</a>
+            </div>
+        </div>
+    </div>
+{% endblock %}

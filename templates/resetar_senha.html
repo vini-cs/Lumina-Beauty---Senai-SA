@@ -1,0 +1,40 @@
+{% extends 'base.html' %}
+{% block title %}Redefinir Senha - Lumina Beauty{% endblock %}
+
+{% block content %}
+<div class="container my-5">
+    <div class="row justify-content-center">
+        <div class="col-lg-5">
+
+            {% with messages = get_flashed_messages(with_categories=true) %}
+                {% if messages %}
+                    {% for category, message in messages %}
+                        <div class="alert alert-{{ category }} alert-dismissible fade show" role="alert">
+                            {{ message }}
+                            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                        </div>
+                    {% endfor %}
+                {% endif %}
+            {% endwith %}
+
+            <div class="form-container-card">
+                <h2 class="form-title mb-4">Redefinir Senha</h2>
+                <p>A redefinir a senha para: <strong>{{ email }}</strong></p>
+                
+                <form method="POST" action="{{ url_for('resetar_senha', email=email) }}">
+                    <div class="mb-3">
+                        <label for="nova_senha" class="form-label">Nova Senha</label>
+                        <input type="password" class="form-control" id="nova_senha" name="nova_senha" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="confirmar_senha" class="form-label">Confirmar Nova Senha</label>
+                        <input type="password" class="form-control" id="confirmar_senha" name="confirmar_senha" required>
+                    </div>
+                    
+                    <button type="submit" class="btn btn-primary w-100 mt-3">Salvar Nova Senha</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

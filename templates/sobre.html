@@ -1,0 +1,855 @@
+{% extends 'base.html' %}
+
+{% block title %}Sobre Nós - A Essência Lumina{% endblock %}
+
+{% block content %}
+<style>
+    :root {
+        --primary-color: #e8b8c2;
+        --secondary-color: #f9f0f2;
+        --text-color: #6b4950;
+        --dark-accent: #8c5b65;
+        --gold-color: #c9a87c;
+        --white-color: #f2f2f2;
+        --soft-nude: #e0d0d4;
+        --deep-dark: #2d1b1e;
+        --light-bg: #fefcfd;
+    }
+
+    * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+    }
+
+    /* ===== HERO SECTION ===== */
+    .about-hero {
+        position: relative;
+        height: 80vh;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        overflow: hidden;
+        background: var(--light-bg);
+    }
+
+    .hero-background {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: url('https://images.unsplash.com/photo-1596462502278-27bfdc403348?q=80&w=2000&auto=format&fit=crop') center/cover;
+        opacity: 0.15;
+    }
+
+    .hero-content {
+        position: relative;
+        z-index: 2;
+        text-align: center;
+        max-width: 1000px;
+        padding: 0 40px;
+    }
+
+    .hero-subtitle {
+        font-size: 0.95rem;
+        letter-spacing: 3px;
+        color: var(--gold-color);
+        text-transform: uppercase;
+        font-weight: 700;
+        margin-bottom: 20px;
+        opacity: 0.9;
+    }
+
+    .hero-content h1 {
+        font-size: 5.5rem;
+        font-weight: 900;
+        color: var(--deep-dark);
+        margin-bottom: 30px;
+        letter-spacing: -2px;
+        line-height: 1.1;
+        animation: fadeInUp 1s ease-out;
+    }
+
+    .hero-content p {
+        font-size: 1.3rem;
+        color: var(--text-color);
+        font-weight: 300;
+        line-height: 1.8;
+        margin-bottom: 0;
+        animation: fadeInUp 1s ease-out 0.2s both;
+    }
+
+    .scroll-indicator {
+        position: absolute;
+        bottom: 40px;
+        left: 50%;
+        transform: translateX(-50%);
+        animation: bounce 2s infinite;
+    }
+
+    .scroll-indicator i {
+        font-size: 1.5rem;
+        color: var(--gold-color);
+    }
+
+    @keyframes bounce {
+        0%, 100% { transform: translateX(-50%) translateY(0); }
+        50% { transform: translateX(-50%) translateY(10px); }
+    }
+
+    /* ===== ANIMAÇÕES ===== */
+    @keyframes fadeInUp {
+        from {
+            opacity: 0;
+            transform: translateY(40px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    @keyframes fadeIn {
+        from { opacity: 0; }
+        to { opacity: 1; }
+    }
+
+    @keyframes slideInLeft {
+        from {
+            opacity: 0;
+            transform: translateX(-60px);
+        }
+        to {
+            opacity: 1;
+            transform: translateX(0);
+        }
+    }
+
+    @keyframes slideInRight {
+        from {
+            opacity: 0;
+            transform: translateX(60px);
+        }
+        to {
+            opacity: 1;
+            transform: translateX(0);
+        }
+    }
+
+    /* ===== SEÇÕES DE CONTEÚDO ===== */
+    .content-wrapper {
+        background: var(--light-bg);
+        padding: 100px 0;
+    }
+
+    .story-section {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 60px;
+        align-items: center;
+        margin-bottom: 120px;
+        opacity: 0;
+        animation: fadeIn 0.8s ease-out forwards;
+    }
+
+    .story-section:nth-child(odd) {
+        animation-delay: 0.2s;
+    }
+
+    .story-section:nth-child(even) {
+        animation-delay: 0.4s;
+        grid-template-columns: 1fr 1fr;
+    }
+
+    .story-section:nth-child(even) .story-text {
+        order: 2;
+    }
+
+    .story-section:nth-child(even) .story-image {
+        order: 1;
+    }
+
+    .story-badge {
+        display: inline-block;
+        font-size: 0.8rem;
+        letter-spacing: 2px;
+        text-transform: uppercase;
+        font-weight: 800;
+        color: var(--gold-color);
+        margin-bottom: 15px;
+    }
+
+    .story-section h2 {
+        font-size: 3rem;
+        font-weight: 900;
+        color: var(--deep-dark);
+        margin-bottom: 30px;
+        line-height: 1.2;
+    }
+
+    .story-text p {
+        font-size: 1.05rem;
+        line-height: 1.9;
+        color: var(--text-color);
+        margin-bottom: 20px;
+        font-weight: 400;
+    }
+
+    .story-image {
+        position: relative;
+        border-radius: 8px;
+        overflow: hidden;
+        box-shadow: 0 20px 60px rgba(0, 0, 0, 0.12);
+        transition: transform 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);
+    }
+
+    .story-image:hover {
+        transform: translateY(-10px);
+    }
+
+    .story-image img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        display: block;
+        transition: transform 0.6s ease;
+    }
+
+    .story-image:hover img {
+        transform: scale(1.04);
+    }
+
+    /* ===== QUOTE SECTION ===== */
+    .quote-section {
+        background: linear-gradient(135deg, var(--deep-dark) 0%, #3d262b 100%);
+        color: white;
+        padding: 80px 60px;
+        margin: 120px 0;
+        border-radius: 8px;
+        position: relative;
+        overflow: hidden;
+    }
+
+    .quote-section::before {
+        content: '';
+        position: absolute;
+        top: -50%;
+        right: -10%;
+        width: 600px;
+        height: 600px;
+        background: rgba(201, 168, 124, 0.08);
+        border-radius: 50%;
+    }
+
+    .quote-content {
+        position: relative;
+        z-index: 2;
+    }
+
+    .quote-section h3 {
+        font-size: 1.2rem;
+        font-weight: 700;
+        letter-spacing: 2px;
+        color: var(--gold-color);
+        margin-bottom: 20px;
+        text-transform: uppercase;
+    }
+
+    .quote-section p {
+        font-size: 1.2rem;
+        line-height: 1.9;
+        margin-bottom: 15px;
+        font-weight: 300;
+    }
+
+    .quote-section p:last-child {
+        margin-bottom: 0;
+    }
+
+    /* ===== TEAM SECTION ===== */
+    .team-section {
+        background: white;
+        padding: 100px 0;
+    }
+
+    .section-header {
+        text-align: center;
+        margin-bottom: 80px;
+    }
+
+    .section-header .badge {
+        font-size: 0.8rem;
+        letter-spacing: 2px;
+        text-transform: uppercase;
+        font-weight: 800;
+        color: var(--gold-color);
+        margin-bottom: 15px;
+    }
+
+    .section-header h2 {
+        font-size: 3.5rem;
+        font-weight: 900;
+        color: var(--deep-dark);
+        margin-bottom: 20px;
+    }
+
+    .section-header p {
+        font-size: 1.1rem;
+        color: var(--text-color);
+        max-width: 600px;
+        margin: 0 auto;
+        line-height: 1.8;
+        font-weight: 400;
+    }
+
+    .team-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+        gap: 40px;
+    }
+
+    .team-card {
+        background: var(--light-bg);
+        border-radius: 8px;
+        padding: 40px 30px;
+        text-align: center;
+        transition: all 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);
+        position: relative;
+        overflow: hidden;
+    }
+
+    .team-card::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 3px;
+        background: linear-gradient(90deg, var(--primary-color), var(--gold-color));
+        opacity: 0;
+        transition: opacity 0.4s ease;
+    }
+
+    .team-card:hover {
+        transform: translateY(-20px);
+        box-shadow: 0 30px 80px rgba(0, 0, 0, 0.1);
+    }
+
+    .team-card:hover::before {
+        opacity: 1;
+    }
+
+    .team-img-wrapper {
+        width: 140px;
+        height: 140px;
+        margin: 0 auto 25px;
+        border-radius: 50%;
+        overflow: hidden;
+        border: 3px solid white;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+        transition: all 0.5s ease;
+    }
+
+    .team-card:hover .team-img-wrapper {
+        border-color: var(--gold-color);
+        transform: scale(1.1);
+        box-shadow: 0 15px 50px rgba(201, 168, 124, 0.3);
+    }
+
+    .team-img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        filter: grayscale(20%);
+        transition: filter 0.5s ease, transform 0.5s ease;
+    }
+
+    .team-card:hover .team-img {
+        filter: grayscale(0%);
+        transform: scale(1.1);
+    }
+
+    .team-name {
+        font-size: 1.2rem;
+        font-weight: 800;
+        color: var(--deep-dark);
+        margin-bottom: 5px;
+    }
+
+    .team-role {
+        font-size: 0.8rem;
+        letter-spacing: 1.5px;
+        text-transform: uppercase;
+        font-weight: 700;
+        color: var(--gold-color);
+        margin-bottom: 12px;
+    }
+
+    .team-bio {
+        font-size: 0.95rem;
+        color: var(--text-color);
+        line-height: 1.6;
+        margin-bottom: 20px;
+        min-height: 45px;
+    }
+
+    .team-social {
+        display: flex;
+        gap: 15px;
+        justify-content: center;
+        opacity: 0;
+        transform: translateY(10px);
+        transition: all 0.4s ease;
+    }
+
+    .team-card:hover .team-social {
+        opacity: 1;
+        transform: translateY(0);
+    }
+
+    .team-social a {
+        width: 38px;
+        height: 38px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 50%;
+        background: var(--secondary-color);
+        color: var(--gold-color);
+        transition: all 0.3s ease;
+        font-size: 1rem;
+        text-decoration: none;
+    }
+
+    .team-social a:hover {
+        background: var(--primary-color);
+        color: white;
+        transform: scale(1.2) rotate(10deg);
+    }
+
+    /* ===== CTA SECTION ===== */
+    .cta-section {
+        background: linear-gradient(135deg, var(--deep-dark) 0%, #3d262b 100%);
+        color: white;
+        padding: 100px 60px;
+        text-align: center;
+        border-radius: 8px;
+        margin-top: 120px;
+    }
+
+    .cta-section h2 {
+        font-size: 2.5rem;
+        font-weight: 900;
+        margin-bottom: 20px;
+    }
+
+    .cta-section p {
+        font-size: 1.1rem;
+        margin-bottom: 40px;
+        font-weight: 300;
+        line-height: 1.8;
+    }
+
+    .cta-button {
+        display: inline-block;
+        background: var(--primary-color);
+        color: white;
+        padding: 15px 50px;
+        border-radius: 4px;
+        text-decoration: none;
+        font-weight: 700;
+        font-size: 1rem;
+        letter-spacing: 1px;
+        transition: all 0.4s ease;
+        border: 2px solid var(--primary-color);
+    }
+
+    .cta-button:hover {
+        background: transparent;
+        color: var(--primary-color);
+    }
+
+    /* ===== RESPONSIVE ===== */
+    @media (max-width: 992px) {
+        .hero-content h1 {
+            font-size: 4rem;
+        }
+
+        .story-section {
+            grid-template-columns: 1fr;
+            gap: 40px;
+            margin-bottom: 80px;
+        }
+
+        .story-section:nth-child(even) {
+            grid-template-columns: 1fr;
+        }
+
+        .story-section:nth-child(even) .story-text {
+            order: unset;
+        }
+
+        .story-section:nth-child(even) .story-image {
+            order: unset;
+        }
+
+        .story-section h2 {
+            font-size: 2.5rem;
+        }
+
+        .section-header h2 {
+            font-size: 2.8rem;
+        }
+
+        .quote-section {
+            padding: 60px 40px;
+        }
+    }
+
+    @media (max-width: 768px) {
+        .about-hero {
+            height: 60vh;
+        }
+
+        .hero-content h1 {
+            font-size: 3rem;
+        }
+
+        .hero-content p {
+            font-size: 1.1rem;
+        }
+
+        .hero-subtitle {
+            font-size: 0.85rem;
+        }
+
+        .story-section h2 {
+            font-size: 2rem;
+        }
+
+        .section-header h2 {
+            font-size: 2.2rem;
+        }
+
+        .story-text p {
+            font-size: 1rem;
+        }
+
+        .team-grid {
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 30px;
+        }
+
+        .team-card {
+            padding: 30px 20px;
+        }
+
+        .content-wrapper {
+            padding: 80px 0;
+        }
+
+        .quote-section,
+        .cta-section {
+            padding: 50px 30px;
+        }
+
+        .cta-section h2 {
+            font-size: 2rem;
+        }
+    }
+
+    @media (max-width: 576px) {
+        .about-hero {
+            height: 50vh;
+        }
+
+        .hero-content {
+            padding: 0 20px;
+        }
+
+        .hero-content h1 {
+            font-size: 2.2rem;
+        }
+
+        .hero-content p {
+            font-size: 1rem;
+        }
+
+        .story-section h2 {
+            font-size: 1.8rem;
+        }
+
+        .story-text p {
+            font-size: 0.95rem;
+        }
+
+        .section-header h2 {
+            font-size: 1.8rem;
+        }
+
+        .section-header p {
+            font-size: 1rem;
+        }
+
+        .team-grid {
+            grid-template-columns: 1fr;
+        }
+
+        .team-img-wrapper {
+            width: 120px;
+            height: 120px;
+        }
+
+        .quote-section,
+        .cta-section {
+            padding: 40px 20px;
+        }
+
+        .quote-section p {
+            font-size: 1rem;
+        }
+
+        .cta-section h2 {
+            font-size: 1.5rem;
+        }
+
+        .cta-section p {
+            font-size: 0.95rem;
+        }
+    }
+</style>
+
+<!-- HERO SECTION -->
+<div class="about-hero">
+    <div class="hero-background"></div>
+    <div class="hero-content">
+        <div class="hero-subtitle">Nossa História</div>
+        <h1>A Essência do Brilho</h1>
+        <p>Transformando vidas através da beleza, autenticidade e inovação desde 1997</p>
+    </div>
+    <div class="scroll-indicator">
+        <i class="bi bi-chevron-down"></i>
+    </div>
+</div>
+
+<!-- CONTENT -->
+<div class="content-wrapper">
+    <div class="container">
+
+        <!-- SEÇÃO 1 -->
+        <div class="story-section">
+            <div class="story-text">
+                <span class="story-badge">A Origem</span>
+                <h2>O Poder Transformador da Beleza</h2>
+                <p>A maquiagem atravessa milênios de história humana. No Egito Antigo, realçava traços e afirmava status. Entre povos indígenas, as pinturas corporais representavam identidade, força e espiritualidade. Cada civilização descobriu a mesma verdade: a beleza é expressão.</p>
+                <p>A Lumina Beauty nasceu da convicção de que cada pessoa merece produtos que revelem sua essência verdadeira. Não é apenas maquiagem — é uma declaração de quem você é.</p>
+            </div>
+            <div class="story-image">
+                <img src="https://images.unsplash.com/photo-1522337660859-02fbefca4702?q=80&w=800&auto=format&fit=crop" alt="Origem da Beleza">
+            </div>
+        </div>
+
+        <!-- SEÇÃO 2 -->
+        <div class="story-section">
+            <div class="story-image">
+                <img src="https://images.unsplash.com/photo-1487412947147-5cebf100ffc2?q=80&w=800&auto=format&fit=crop" alt="Primeira Loja">
+            </div>
+            <div class="story-text">
+                <span class="story-badge">1997 — Curitiba</span>
+                <h2>O Início da Jornada</h2>
+                <p>Tudo começou com uma pequena loja em Curitiba. No princípio, revendíamos marcas renomadas. Mas cada cliente nos ensinava algo: queriam mais do que produtos prontos. Queriam parceiros na jornada de autoestima.</p>
+                <p>Com dedicação obsessiva aos detalhes, começamos a criar nossos próprios cosméticos. Fórmulas desenvolvidas com qualidade farmacêutica, identidade brasileira e um brilho próprio que refletisse a força da mulher brasileira.</p>
+            </div>
+        </div>
+
+        <!-- QUOTE SECTION -->
+        <div class="quote-section">
+            <div class="quote-content">
+                <h3>A Grande Provação</h3>
+                <p>Enfrentamos uma crise que quase nos tirou do mercado. Mudanças estruturais no setor elevaram custos drasticamente. Muitas marcas pequenas fecharam. Estávamos à beira do abismo.</p>
+                <p>Meses de incerteza, redução de estoque, noites de insônia. Mas escolhemos não desistir. Voltamos à essência, ouvimos nossos clientes e nos reinventamos completamente.</p>
+            </div>
+        </div>
+
+        <!-- SEÇÃO 3 -->
+        <div class="story-section">
+            <div class="story-text">
+                <span class="story-badge">O Renascimento</span>
+                <h2>Da Crise à Transformação Digital</h2>
+                <p>A adversidade nos forçou a questionar tudo. Descobrimos que nossos clientes não buscavam apenas beleza — queriam autenticidade, propósito e cuidado genuíno.</p>
+                <p>Reformulamos processos, investimos em fórmulas mais seguras e sustentáveis. A internet nos permitiu alcançar mais pessoas, criar comunidades, compartilhar histórias. Evoluímos de uma loja para um movimento.</p>
+                <p>Hoje, você está aqui. Esperamos que encontre muito mais do que produtos — esperamos que encontre inspiração para brilhar como você merece.</p>
+            </div>
+            <div class="story-image">
+                <img src="https://images.unsplash.com/photo-1516975080664-ed2fc6a32937?q=80&w=800&auto=format&fit=crop" alt="Transformação Digital">
+            </div>
+        </div>
+
+    </div>
+</div>
+
+<!-- TEAM SECTION -->
+<!-- TEAM SECTION -->
+<div class="team-section">
+    <div class="container">
+        
+        <!-- EQUIPE DE ADMINISTRAÇÃO -->
+        <div class="section-header">
+            <div class="badge">LIDERANÇA</div>
+            <h2>Equipe de Administração</h2>
+            <p>Os visionários que guiam a Lumina Beauty rumo à excelência em cada decisão estratégica.</p>
+        </div>
+
+        <div class="team-grid">
+            <div class="team-card">
+                <div class="team-img-wrapper">
+                    <img src="{{ url_for('static', filename='images/eloah.jpg') }}" alt="Eloáh Correia" class="team-img">
+                </div>
+                <h3 class="team-name">Eloáh Correia Novakowski</h3>
+                <div class="team-role">CEO</div>
+                <p class="team-bio">Visionária que transformou uma pequena loja em um movimento de beleza autêntica</p>
+                <div class="team-social">
+                    <a href="#" title="LinkedIn"><i class="bi bi-linkedin"></i></a>
+                    <a href="#" title="Email"><i class="bi bi-envelope"></i></a>
+                </div>
+            </div>
+
+            <div class="team-card">
+                <div class="team-img-wrapper">
+                    <img src="{{ url_for('static', filename='images/anaclara.jpg') }}" alt="Ana Clara" class="team-img">
+                </div>
+                <h3 class="team-name">Ana Clara Darolt</h3>
+                <div class="team-role">Diretora Financeira</div>
+                <p class="team-bio">Estrategista que navegou pela crise e construiu crescimento sustentável</p>
+                <div class="team-social">
+                    <a href="#" title="LinkedIn"><i class="bi bi-linkedin"></i></a>
+                </div>
+            </div>
+
+            <div class="team-card">
+               <div class="team-img-wrapper">
+                    <img src="{{ url_for('static', filename='images/rapha.jpg') }}" alt="Raphaella" class="team-img">
+                </div>
+
+                <h3 class="team-name">Raphaella Victoria Pinheiro Adami</h3>
+                <div class="team-role">Head de Produto</div>
+                <p class="team-bio">Inovadora apaixonada por fórmulas que transformam vidas e peles</p>
+                <div class="team-social">
+                    <a href="#" title="Instagram"><i class="bi bi-instagram"></i></a>
+                </div>
+            </div>
+
+            <div class="team-card">
+                <div class="team-img-wrapper">
+                    <img src="{{ url_for('static', filename='images/a.jpg') }}" alt="Ana Souza" class="team-img">
+                </div>
+                <h3 class="team-name">Arthur Voit Reder</h3>
+                <div class="team-role">Diretor Logística</div>
+                <p class="team-bio">Especialista em garantir que cada produto chegue com perfeição absoluta</p>
+                <div class="team-social">
+                    <a href="#" title="Email"><i class="bi bi-envelope"></i></a>
+                </div>
+            </div>
+        </div>
+
+        <!-- DIVISOR ENTRE EQUIPES -->
+        <div style="margin: 100px 0;"></div>
+
+        <!-- EQUIPE DE DESENVOLVIMENTO -->
+        <div class="section-header">
+            <div class="badge">TECNOLOGIA</div>
+            <h2>Equipe de Desenvolvimento de Sistemas</h2>
+            <p>Os especialistas em tecnologia que constroem a experiência digital da Lumina Beauty.</p>
+        </div>
+
+        <div class="team-grid">
+            <div class="team-card">
+                <div class="team-img-wrapper">
+                    <img src="{{ url_for('static', filename='images/ViniciusP.jpg') }}" alt="Ricardo Mendes" class="team-img">
+                </div>
+                <h3 class="team-name">Vinícius Philippi Lessa</h3>
+                <div class="team-role">Tech Lead</div>
+                <p class="team-bio">Arquiteto de experiências digitais que conectam beleza com tecnologia</p>
+                <div class="team-social">
+                    <a href="#" title="GitHub"><i class="bi bi-github"></i></a>
+                    <a href="#" title="LinkedIn"><i class="bi bi-linkedin"></i></a>
+                </div>
+            </div>
+
+            <div class="team-card">
+                <div class="team-img-wrapper">
+                    <img src="{{ url_for('static', filename='images/ViniM.jpg') }}" alt="Vinicius Marcelino" class="team-img">
+                </div>
+                <h3 class="team-name">Vinicius Marcelino</h3>
+                <div class="team-role">Full Stack Developer</div>
+                <p class="team-bio">Desenvolvedor versátil especialista em criar experiências web fluidas</p>
+                <div class="team-social">
+                    <a href="#" title="GitHub"><i class="bi bi-github"></i></a>
+                    <a href="#" title="LinkedIn"><i class="bi bi-linkedin"></i></a>
+                </div>
+            </div>
+
+            <div class="team-card">
+                <div class="team-img-wrapper">
+                    <img src="{{ url_for('static', filename='images/Eder.jpg') }}" alt="Eder Jessé Tomelin" class="team-img">
+                </div>
+                <h3 class="team-name">Eder Jessé Tomelin</h3>
+                <div class="team-role">UI/UX Designer</div>
+                <p class="team-bio">Artista digital que traduz beleza em interfaces intuitivas e memoráveis</p>
+                <div class="team-social">
+                    <a href="#" title="Behance"><i class="bi bi-behance"></i></a>
+                    <a href="#" title="Dribbble"><i class="bi bi-dribbble"></i></a>
+                </div>
+            </div>
+
+            <div class="team-card">
+                <div class="team-img-wrapper">
+                    <img src="{{ url_for('static', filename='images/Gustavo.jpg') }}" alt="Gustavo Henrique da Silva" class="team-img">
+                </div>
+                <h3 class="team-name">Gustavo Henrique da Silva</h3>
+                <div class="team-role">Backend Developer</div>
+                <p class="team-bio">Especialista em APIs robustas e arquitetura de sistemas escaláveis</p>
+                <div class="team-social">
+                    <a href="#" title="GitHub"><i class="bi bi-github"></i></a>
+                </div>
+            </div>
+
+            <div class="team-card">
+                <div class="team-img-wrapper">
+                    <img src="{{ url_for('static', filename='images/Yan.jpg') }}" alt="Yan Kauê Rocha" class="team-img">
+                </div>
+                <h3 class="team-name">Yan Kauê Rocha</h3>
+                <div class="team-role">DevOps Engineer</div>
+                <p class="team-bio">Guardião da infraestrutura que mantém a Lumina online 24/7</p>
+                <div class="team-social">
+                    <a href="#" title="LinkedIn"><i class="bi bi-linkedin"></i></a>
+                </div>
+            </div>
+
+            <div class="team-card">
+                <div class="team-img-wrapper">
+                    <img src="{{ url_for('static', filename='images/Elias.jpg') }}" alt="Elias do Amaral Rodrigues" class="team-img">
+                </div>
+                <h3 class="team-name">Elias do Amaral Rodrigues</h3>
+                <div class="team-role">QA Engineer</div>
+                <p class="team-bio">Perfeccionista obcecado por qualidade e experiências impecáveis</p>
+                <div class="team-social">
+                    <a href="#" title="LinkedIn"><i class="bi bi-linkedin"></i></a>
+                </div>
+            </div>
+        </div>
+
+    </div>
+</div>
+
+<!-- CTA SECTION -->
+<div class="container">
+    <div class="cta-section">
+        <h2>Pronta para Brilhar?</h2>
+        <p>Explore nossa coleção completa e descubra produtos que transformam mais do que a aparência — transformam a confiança</p>
+        <a href="{{ url_for('index') }}" class="cta-button">Explorar Produtos</a>
+    </div>
+</div>
+
+{% endblock %}

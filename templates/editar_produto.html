@@ -1,0 +1,60 @@
+{% extends 'base.html' %}
+
+{% block title %}Editar Produto - Admin{% endblock %}
+
+{% block content %}
+<div class="container my-5">
+    <div class="row">
+        <div class="col-12">
+            <h2 class="category-title mb-4">Editar Produto: <span style="color: var(--primary-color);">{{ produto.nome }}</span></h2>
+        </div>
+    </div>
+
+    <div class="row mb-5">
+        <div class="col-12">
+            <div class="form-container-card">
+                <form action="{{ url_for('editar_produto', id=produto.id) }}" method="POST">
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="nome" class="form-label">Nome do Produto</label>
+                            <input type="text" class="form-control" id="nome" name="nome" value="{{ produto.nome }}" required>
+                        </div>
+                        <div class="col-md-3 mb-3">
+                            <label for="preco" class="form-label">Preço (ex: 99.90)</label>
+                            <input type="text" class="form-control" id="preco" name="preco" value="{{ produto.preco }}" required>
+                        </div>
+                         <div class="col-md-3 mb-3">
+                            <label for="estoque" class="form-label">Estoque</label>
+                            <input type="number" class="form-control" id="estoque" name="estoque" value="{{ produto.estoque }}" min="0" required>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-8 mb-3">
+                            <label for="imagem" class="form-label">URL da Imagem</label>
+                            <input type="text" class="form-control" id="imagem" name="imagem" value="{{ produto.imagem }}" placeholder="https://...">
+                            <small class="form-text text-muted">Deixe em branco para manter a imagem atual.</small>
+                        </div>
+                        <div class="col-md-4 mb-3">
+                            <label for="categoria" class="form-label">Categoria</label>
+                            <select class="form-select" id="categoria" name="categoria" required>
+                                <option value="rosto" {% if produto.categoria == 'rosto' %}selected{% endif %}>Rosto</option>
+                                <option value="olhos" {% if produto.categoria == 'olhos' %}selected{% endif %}>Olhos</option>
+                                <option value="labios" {% if produto.categoria == 'labios' %}selected{% endif %}>Lábios</option>
+                                <option value="skincare" {% if produto.categoria == 'skincare' %}selected{% endif %}>Skincare</option>
+                                <option value="pinceis" {% if produto.categoria == 'pinceis' %}selected{% endif %}>Pincéis</option>
+                                <option value="kits" {% if produto.categoria == 'kits' %}selected{% endif %}>Kits</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label for="descricao" class="form-label">Descrição</label>
+                        <textarea class="form-control" id="descricao" name="descricao" rows="3">{{ produto.descricao }}</textarea>
+                    </div>
+                    <button type="submit" class="btn btn-primary">Salvar Alterações</button>
+                    <a href="{{ url_for('admin_produtos') }}" class="btn btn-secondary-custom">Cancelar</a>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,303 @@
+{% extends 'base.html' %}
+
+{% block title %}Pagamento Seguro - Lumina Beauty{% endblock %}
+
+{% block content %}
+
+<style>
+    .payment-wrapper {
+        background: linear-gradient(135deg, #fdfbfb 0%, #f7f1f3 100%);
+        padding: 4rem 0;
+        min-height: 85vh;
+    }
+
+    /* Timeline Funcional (MANTIDA) */
+    .checkout-steps {
+        display: flex;
+        justify-content: center;
+        margin-bottom: 3rem;
+        position: relative;
+        max-width: 600px;
+        margin-left: auto;
+        margin-right: auto;
+    }
+    .steps-line {
+        position: absolute;
+        top: 15px; left: 10%; right: 10%;
+        height: 2px;
+        background: #e0e0e0;
+        z-index: 1;
+    }
+    .step-item {
+        position: relative;
+        z-index: 2;
+        background: transparent;
+        text-align: center;
+        flex: 1;
+    }
+    .step-link { text-decoration: none; display: block; transition: transform 0.2s; }
+    .step-link:hover { transform: scale(1.1); }
+
+    .step-circle {
+        width: 35px; height: 35px;
+        border-radius: 50%;
+        background: #fff;
+        border: 2px solid #e0e0e0;
+        color: #aaa;
+        display: flex; align-items: center; justify-content: center;
+        margin: 0 auto 8px;
+        font-weight: 700;
+        font-size: 0.9rem;
+        transition: all 0.3s;
+    }
+    .step-item.active .step-circle {
+        border-color: var(--primary-color);
+        background: var(--primary-color);
+        color: white;
+        box-shadow: 0 0 0 4px rgba(232, 184, 194, 0.3);
+    }
+    .step-item.completed .step-circle {
+        background: #10b981;
+        border-color: #10b981;
+        color: white;
+    }
+    .step-label { font-size: 0.85rem; color: #888; font-weight: 600; }
+    .step-item.active .step-label { color: var(--dark-accent); }
+
+    /* Card Principal */
+    .payment-card {
+        background: white;
+        border-radius: 20px;
+        box-shadow: 0 15px 35px rgba(107, 73, 80, 0.08);
+        padding: 2.5rem;
+        border: 1px solid rgba(255, 255, 255, 0.8);
+    }
+
+    /* Cartão Visual */
+    .card-visual {
+        background: linear-gradient(135deg, #2c3e50, #4ca1af);
+        border-radius: 15px;
+        padding: 1.5rem;
+        color: white;
+        margin-bottom: 2rem;
+        position: relative;
+        overflow: hidden;
+        height: 200px;
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+        box-shadow: 0 10px 20px rgba(44, 62, 80, 0.3);
+    }
+    .card-chip { width: 40px; height: 30px; background: linear-gradient(135deg, #ffd700, #b8860b); border-radius: 5px; margin-bottom: 1rem; }
+    .card-number-display { font-family: 'Courier New', monospace; font-size: 1.4rem; letter-spacing: 2px; text-shadow: 1px 1px 2px rgba(0,0,0,0.5); }
+    .card-name-display { text-transform: uppercase; font-size: 0.9rem; letter-spacing: 1px; }
+
+    /* Form */
+    .form-control { border-radius: 12px; padding: 0.8rem 1rem; border: 1px solid #eee; background-color: #fcfcfc; }
+    .form-control:focus { background-color: white; border-color: var(--primary-color); box-shadow: 0 0 0 4px rgba(232, 184, 194, 0.2); }
+
+    .btn-pay {
+        width: 100%; border-radius: 50px; padding: 1rem; font-weight: 700; font-size: 1.1rem;
+        background-color: #10b981; border: none; color: white; margin-top: 1rem;
+        transition: transform 0.2s; display: flex; align-items: center; justify-content: center; gap: 10px;
+    }
+    .btn-pay:hover { background-color: #059669; transform: translateY(-2px); }
+
+    /* Resumo */
+    .summary-row { display: flex; justify-content: space-between; margin-bottom: 0.8rem; font-size: 0.95rem; color: #555; }
+    .summary-total { 
+        display: flex; justify-content: space-between; align-items: center; 
+        margin-top: 1rem; padding-top: 1rem; border-top: 1px solid rgba(0,0,0,0.05); 
+        font-weight: 700; font-size: 1.2rem; color: var(--dark-accent); 
+    }
+    /* Estilo para o valor total dinâmico */
+    #total-pagar-display {
+        font-size: 1.1rem;
+        text-align: right;
+    }
+</style>
+
+<div class="payment-wrapper">
+    <div class="container">
+        
+        <div class="row">
+        <div class="col-12">
+            <ul class="checkout-timeline">
+                <li class="timeline-step active">
+                    <div class="step-wrapper">
+                        <div class="step-icon"><i class="bi bi-cart"></i></div>
+                        <div class="step-label">Carrinho</div>
+                    </div>
+                </li>
+                <li class="timeline-step active">
+                    <div class="step-wrapper">
+                        <div class="step-icon"><i class="bi bi-credit-card"></i></div>
+                        <div class="step-label">Pagamento</div>
+                    </div>
+                </li>
+                <li class="timeline-step {% if step == 'confirmacao' %}active{% endif %}">
+                    <div class="step-wrapper">
+                        <div class="step-icon"><i class="bi bi-check-lg"></i></div>
+                        <div class="step-label">Confirmação</div>
+                    </div>
+                </li>
+            </ul>
+        </div>
+    </div>
+
+        <div class="row g-5">
+            <div class="col-lg-7">
+                <div class="payment-card">
+                    <h4 class="mb-4 text-dark"><i class="bi bi-credit-card-2-front"></i> Dados do Cartão</h4>
+                    
+                    <div class="card-visual d-none d-md-flex">
+                        <div class="card-chip"></div>
+                        <div class="card-number-display" id="card-display-num">•••• •••• •••• ••••</div>
+                        <div class="d-flex justify-content-between align-items-end">
+                            <div>
+                                <small style="font-size: 0.7rem; opacity: 0.8;">TITULAR</small>
+                                <div class="card-name-display" id="card-display-name">SEU NOME AQUI</div>
+                            </div>
+                            <div>
+                                <small style="font-size: 0.7rem; opacity: 0.8;">VALIDADE</small>
+                                <div style="font-family: monospace;" id="card-display-date">MM/AA</div>
+                            </div>
+                            <i class="bi bi-bank" style="font-size: 2rem; opacity: 0.8;"></i>
+                        </div>
+                    </div>
+
+                    <form action="{{ url_for('pagamento_cartao') }}" method="POST">
+                        <div class="mb-3">
+                            <label class="form-label small fw-bold text-muted">NÚMERO DO CARTÃO</label>
+                            <input type="text" class="form-control" id="numero_cartao" name="numero_cartao" placeholder="0000 0000 0000 0000" maxlength="19" required>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label small fw-bold text-muted">NOME IMPRESSO</label>
+                            <input type="text" class="form-control" id="nome_titular" name="nome_titular" placeholder="COMO NO CARTÃO" required>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-6 mb-3">
+                                <label class="form-label small fw-bold text-muted">VALIDADE</label>
+                                <input type="text" class="form-control" id="validade" name="validade" placeholder="MM/AA" maxlength="5" required>
+                            </div>
+                            <div class="col-6 mb-3">
+                                <label class="form-label small fw-bold text-muted">CVV</label>
+                                <input type="text" class="form-control" id="cvv" name="cvv" placeholder="123" maxlength="4" required>
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label small fw-bold text-muted">PARCELAMENTO (SEM JUROS)</label>
+                            <select class="form-select form-control" name="parcelas" id="select-parcelas">
+                                {% for n in range(1, 13) %}
+                                    <option value="{{ n }}" data-valor-parcela="{{ '%.2f'|format(total_final / n) }}">
+                                        {{ n }}x de R$ {{ "%.2f"|format(total_final / n) }}
+                                    </option>
+                                {% endfor %}
+                            </select>
+                        </div>
+
+                        <button type="submit" class="btn btn-pay" href="{{ url_for('checkout_confirmacao') }}">
+                            <i class="bi bi-lock-fill"></i> Pagar
+                        </button>
+                        
+                        <div class="text-center mt-3">
+                            <small class="text-muted"><i class="bi bi-shield-check"></i> Pagamento processado com segurança SSL.</small>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <div class="col-lg-5">
+                <div class="payment-card" style="background-color: #fff5f7;">
+                    <h4 class="mb-4 text-dark">Resumo do Pedido</h4>
+                    
+                    <div class="summary-row">
+                        <span>Subtotal (Itens)</span>
+                        <span>R$ {{ "%.2f"|format(subtotal) }}</span>
+                    </div>
+                    
+                    <div class="summary-row">
+                        <span>Frete</span>
+                        {% if frete == 0 %}
+                            <span class="text-success fw-bold">Grátis</span>
+                        {% else %}
+                            <span>R$ {{ "%.2f"|format(frete) }}</span>
+                        {% endif %}
+                    </div>
+
+                    <div class="summary-total">
+                        <span>Total a Pagar</span>
+                        <span style="color: var(--dark-accent);" id="total-pagar-display">
+                            R$ {{ "%.2f"|format(total_final) }}
+                        </span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        
+        // --- 1. LÓGICA DE ATUALIZAÇÃO DO TOTAL (PARCELAS) ---
+        const selectParcelas = document.getElementById('select-parcelas');
+        const totalDisplay = document.getElementById('total-pagar-display');
+        
+        // Valor total original (vindo do backend)
+        const valorTotalOriginal = "R$ {{ '%.2f'|format(total_final) }}";
+
+        selectParcelas.addEventListener('change', function() {
+            const parcelas = parseInt(this.value);
+            
+            if (parcelas === 1) {
+                // Se for 1x, mostra o valor total normal
+                totalDisplay.innerText = valorTotalOriginal;
+                totalDisplay.style.fontSize = "1.2rem";
+            } else {
+                // Se for parcelado, pega o valor da parcela do atributo data e mostra formatado
+                const opcaoSelecionada = this.options[this.selectedIndex];
+                const valorParcela = opcaoSelecionada.getAttribute('data-valor-parcela');
+                
+                totalDisplay.innerHTML = `${parcelas}x de R$ ${valorParcela}`;
+                totalDisplay.style.fontSize = "1.1rem"; // Ajusta tamanho para caber
+            }
+        });
+
+        // --- 2. MÁSCARAS E VISUAL DO CARTÃO ---
+        const ccInput = document.getElementById('numero_cartao');
+        const valInput = document.getElementById('validade');
+        const nomeInput = document.getElementById('nome_titular');
+        
+        // Displays
+        const dNum = document.getElementById('card-display-num');
+        const dName = document.getElementById('card-display-name');
+        const dDate = document.getElementById('card-display-date');
+
+        if(ccInput) {
+            ccInput.addEventListener('input', (e) => {
+                let v = e.target.value.replace(/\D/g, '').replace(/(\d{4})/g, '$1 ').trim().substring(0, 19);
+                e.target.value = v;
+                dNum.innerText = v || '•••• •••• •••• ••••';
+            });
+        }
+        if(valInput) {
+            valInput.addEventListener('input', (e) => {
+                let v = e.target.value.replace(/\D/g, '');
+                if (v.length >= 2) v = v.substring(0, 2) + '/' + v.substring(2, 4);
+                e.target.value = v;
+                dDate.innerText = v || 'MM/AA';
+            });
+        }
+        if(nomeInput) {
+            nomeInput.addEventListener('input', (e) => {
+                dName.innerText = e.target.value.toUpperCase() || 'SEU NOME AQUI';
+            });
+        }
+    });
+</script>
+
+{% endblock %}

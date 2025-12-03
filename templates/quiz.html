@@ -1,0 +1,195 @@
+{% extends 'base.html' %}
+{% block title %}Quiz de Maquiagem - Lumina Beauty{% endblock %}
+
+{% block content %}
+<div class="container my-5">
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <div class="quiz-container">
+                
+                <div id="quiz-intro" class="text-center">
+                    <i class="bi bi-magic fs-1" style="color: var(--primary-color);"></i>
+                    <h2 class="form-title my-3">Descubra a sua Make Ideal</h2>
+                    <p class="category-subtitle mb-4">Responda a 4 perguntas e vá direto ao seu produto perfeito!</p>
+                    <button class="btn btn-primary btn-lg" id="start-quiz-btn">Começar o Quiz</button>
+                </div>
+
+                <div id="quiz-questions" class="d-none">
+                    <div class="progress mb-4" style="height: 10px;">
+                        <div id="quiz-progress-bar" class="progress-bar" role="progressbar" style="width: 25%; background-color: var(--primary-color);"></div>
+                    </div>
+                    
+                    <div class="quiz-step active" data-step="1">
+                        <div class="quiz-question">
+                            <h4>1. Qual é o seu maior objetivo?</h4>
+                            <div class="quiz-options d-grid gap-2">
+                                <button class="btn btn-outline-primary btn-lg" data-tags="skincare,natural"><i class="bi bi-sun me-2"></i> Um look "acordei assim", bem natural.</button>
+                                <button class="btn btn-outline-primary btn-lg" data-tags="olhos,dramatico"><i class="bi bi-eye-fill me-2"></i> Realçar os olhos, um olhar marcante.</button>
+                                <button class="btn btn-outline-primary btn-lg" data-tags="rosto,pele"><i class="bi bi-person-check-fill me-2"></i> Uma pele perfeita e uniforme.</button>
+                                <button class="btn btn-outline-primary btn-lg" data-tags="labios,ousado"><i class="bi bi-heart-fill me-2"></i> Lábios ousados e coloridos.</button>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="quiz-step" data-step="2">
+                        <div class="quiz-question">
+                            <h4>2. Quanto tempo você tem?</h4>
+                            <div class="quiz-options d-grid gap-2">
+                                <button class="btn btn-outline-primary btn-lg" data-tags="rapido,kit"><i class="bi bi-stopwatch me-2"></i> 5 Minutos! O mais rápido possível.</button>
+                                <button class="btn btn-outline-primary btn-lg" data-tags="rosto,labios,olhos"><i class="bi bi-clock me-2"></i> 15 Minutos. Dá para caprichar um pouco.</button>
+                                <button class="btn btn-outline-primary btn-lg" data-tags="pinceis,dramatico,pele"><i class="bi bi-hourglass-split me-2"></i> 30+ Minutos. É o tempo ideal!</button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="quiz-step" data-step="3">
+                        <div class="quiz-question">
+                            <h4>3. Tipo de pele?</h4>
+                            <div class="quiz-options d-grid gap-2">
+                                <button class="btn btn-outline-primary btn-lg" data-tags="rosto,matte"><i class="bi bi-droplet-half me-2"></i> Oleosa ou Mista</button>
+                                <button class="btn btn-outline-primary btn-lg" data-tags="skincare,glow"><i class="bi bi-droplet me-2"></i> Seca ou Sensível</button>
+                                <button class="btn btn-outline-primary btn-lg" data-tags="pele,rosto"><i class="bi bi-emoji-smile me-2"></i> Normal</button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="quiz-step" data-step="4">
+                        <div class="quiz-question">
+                            <h4>4. Acabamento favorito?</h4>
+                            <div class="quiz-options d-grid gap-2">
+                                <button class="btn btn-outline-primary btn-lg" data-tags="matte,rosto"><i class="bi bi-record-circle me-2"></i> Matte (totalmente sem brilho)</button>
+                                <button class="btn btn-outline-primary btn-lg" data-tags="glow,skincare,labios"><i class="bi bi-brightness-high me-2"></i> Glow / Luminoso</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div id="quiz-loading" class="text-center d-none py-5">
+                    <div class="spinner-border text-primary" style="width: 3rem; height: 3rem;" role="status"></div>
+                    <h3 class="mt-4 text-muted">Buscando seu produto ideal...</h3>
+                </div>
+
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const startBtn = document.getElementById('start-quiz-btn');
+    const quizIntro = document.getElementById('quiz-intro');
+    const quizQuestions = document.getElementById('quiz-questions');
+    const quizLoading = document.getElementById('quiz-loading');
+    const progressBar = document.getElementById('quiz-progress-bar');
+    const steps = document.querySelectorAll('.quiz-step');
+    const totalSteps = steps.length;
+    let currentStep = 1;
+    let scores = {};
+
+    // Mapeamento baseado nos produtos do banco
+    const produtosMap = {
+        // Combinações que levam a produtos específicos
+        'labios+ousado': 5,        // ID 5: Batom Líquido
+        'labios+labios': 5,        // ID 5: Batom Líquido (duplicado para prioridade)
+        'skincare+natural': 6,     // ID 6: Sérum Vitamina C
+        'skincare+skincare': 6,    // ID 6: Sérum Vitamina C (prioridade)
+        'rosto+matte': 1,          // ID 1: Base Líquida
+        'olhos+dramatico': 3,      // ID 3: Paleta de Sombras
+        'rosto+pele': 2,           // ID 2: Blush Compacto
+        'rapido+kit': 9,           // ID 9: Maleta Completa
+        'olhos+rapido': 4,         // ID 4: Máscara de Cílios
+        'pinceis+dramatico': 7,    // ID 7: Kit Pincéis
+        'rosto+labios+olhos': 8    // ID 8: Esponja de Maquiagem
+    };
+
+    // IDs de fallback por categoria principal
+    const categoriaIds = {
+        'labios': 5,      // ID 5: Batom Líquido
+        'skincare': 6,    // ID 6: Sérum Vitamina C
+        'rosto': 1,       // ID 1: Base Líquida (fallback)
+        'olhos': 3,       // ID 3: Paleta de Sombras (fallback)
+        'pinceis': 7,     // ID 7: Kit Pincéis (fallback)
+        'kit': 9          // ID 9: Maleta Completa (fallback)
+    };
+
+    startBtn.addEventListener('click', () => {
+        quizIntro.classList.add('d-none');
+        quizQuestions.classList.remove('d-none');
+        showStep(currentStep);
+    });
+
+    function showStep(step) {
+        steps.forEach(el => el.classList.remove('active'));
+        document.querySelector(`.quiz-step[data-step="${step}"]`).classList.add('active');
+        const progress = (step / totalSteps) * 100;
+        progressBar.style.width = `${progress}%`;
+    }
+
+    document.querySelectorAll('.quiz-options button').forEach(button => {
+        button.addEventListener('click', function() {
+            const tags = this.getAttribute('data-tags').split(',');
+            tags.forEach(tag => scores[tag] = (scores[tag] || 0) + 1);
+
+            if (currentStep < totalSteps) {
+                currentStep++;
+                showStep(currentStep);
+            } else {
+                finishQuiz();
+            }
+        });
+    });
+
+    function finishQuiz() {
+        quizQuestions.classList.add('d-none');
+        quizLoading.classList.remove('d-none');
+
+        // Criar string de combinação para verificar mapeamentos específicos
+        const sortedTags = Object.keys(scores).sort();
+        const tagsString = sortedTags.join('+');
+        
+        let produtoId = 9; // Padrão: Maleta Completa (ID 9)
+        
+        // Verificar combinações específicas primeiro
+        for (const combination in produtosMap) {
+            const requiredTags = combination.split('+');
+            const hasAllTags = requiredTags.every(tag => scores[tag] > 0);
+            
+            if (hasAllTags) {
+                produtoId = produtosMap[combination];
+                break;
+            }
+        }
+        
+        // Se não encontrou combinação específica, usar sistema de pontuação
+        if (produtoId === 9) {
+            // Regras de prioridade originais (mas ajustadas)
+            if (scores['labios'] >= 2) produtoId = 5;         // Batom
+            else if (scores['skincare'] >= 2) produtoId = 6;  // Sérum
+            else if (scores['rosto'] >= 2 && scores['matte']) produtoId = 1; // Base
+            else if (scores['rapido'] && scores['kit']) produtoId = 9; // Maleta
+            else {
+                // Encontrar categoria com maior pontuação
+                let bestCategory = 'kit';
+                let maxScore = 0;
+                
+                for (const tag in scores) {
+                    if (scores[tag] > maxScore && categoriaIds[tag]) {
+                        maxScore = scores[tag];
+                        bestCategory = tag;
+                    }
+                }
+                
+                produtoId = categoriaIds[bestCategory] || 9;
+            }
+        }
+
+        // Redirecionar
+        setTimeout(() => {
+            window.location.href = `/produto/${produtoId}`;
+        }, 800);
+    }
+});
+</script>
+{% endblock %}

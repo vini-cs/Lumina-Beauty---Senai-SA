@@ -1,0 +1,61 @@
+{% extends 'base.html' %}
+{% block title %}Recuperar Senha - Lumina Beauty{% endblock %}
+
+{% block content %}
+<div class="container my-5">
+    <div class="row justify-content-center">
+        <div class="col-lg-5">
+
+            {% with messages = get_flashed_messages(with_categories=true) %}
+                {% if messages %}
+                    {% for category, message in messages %}
+                        <div class="alert alert-{{ category }} alert-dismissible fade show" role="alert">
+                            {{ message }}
+                            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                        </div>
+                    {% endfor %}
+                {% endif %}
+            {% endwith %}
+
+            <div class="form-container-card">
+                <h2 class="form-title mb-4">Recuperar Senha</h2>
+                <p>Insira o seu e-mail de registo. Se a conta existir, iremos gerar uma senha temporária para você.</p>
+                
+                <form method="POST" action="{{ url_for('recuperar_senha') }}">
+                    <div class="mb-3">
+                        <label for="email" class="form-label">E-mail</label>
+                        <input type="email" class="form-control" id="email" name="email" 
+                               placeholder="seuemail@provedor.com" required>
+                    </div>
+                    
+                    <button type="submit" class="btn btn-primary w-100 mt-3">
+                        <i class="bi bi-send me-2"></i> Enviar Recuperação
+                    </button>
+                    
+                    <div class="text-center mt-4">
+                        <a href="{{ url_for('login') }}" class="form-link">Voltar para o Login</a> 
+                    </div>
+                </form>
+
+                <div class="alert alert-info mt-4">
+                    <i class="bi bi-info-circle-fill me-2"></i>
+                    <small><strong>Dados de Teste:</strong> Email: <code>admin@lumina.com</code>, <code>ana@email.com</code> ou <code>bia@email.com</code></small>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    // Auto-dismiss dos alerts após 1.5 segundos
+    document.addEventListener('DOMContentLoaded', function() {
+        const alerts = document.querySelectorAll('.alert');
+        alerts.forEach(alert => {
+            setTimeout(() => {
+                const bsAlert = new bootstrap.Alert(alert);
+                bsAlert.close();
+            }, 1500);
+        });
+    });
+</script>
+{% endblock %}

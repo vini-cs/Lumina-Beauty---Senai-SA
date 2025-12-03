@@ -1,0 +1,43 @@
+{% extends 'base.html' %}
+{% block title %}Simulação de E-mail{% endblock %}
+
+{% block content %}
+<div class="container my-5">
+    <div class="row justify-content-center">
+        <div class="col-lg-7">
+
+            {% with messages = get_flashed_messages(with_categories=true) %}
+                {% if messages %}
+                    {% for category, message in messages %}
+                        <div class="alert alert-{{ category }} alert-dismissible fade show" role="alert">
+                            {{ message }}
+                            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                        </div>
+                    {% endfor %}
+                {% endif %}
+            {% endwith %}
+
+            <div class="form-container-card text-center">
+                <h2 class="form-title mb-4">Caixa de Entrada (Simulada)</h2>
+                
+                {% if user %}
+                    <p>Numa aplicação real, um e-mail seria enviado para <strong>{{ email }}</strong>.</p>
+                    <p>Como isto é uma simulação, por favor clique no link abaixo para redefinir a sua senha:</p>
+                    
+                    <a href="{{ url_for('resetar_senha', email=email) }}" class="btn btn-primary btn-lg mt-3">
+                        Redefinir Senha
+                    </a>
+                {% else %}
+                    <p>Se uma conta existisse para <strong>{{ email }}</strong>, um e-mail teria sido enviado.</p>
+                    <p>Como não recebemos nada, pode fechar esta página.</p>
+                    
+                    <a href="{{ url_for('index') }}" class="btn btn-secondary-custom mt-3">
+                        Voltar à Página Inicial
+                    </a>
+                {% endif %}
+                
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

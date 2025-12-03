@@ -1,0 +1,198 @@
+{% extends 'base.html' %}
+{% block title %}Meu Carrinho - Lumina Beauty{% endblock %}
+{% block content %}
+
+<style>
+    .quantity-pill {
+        display: inline-flex;
+        align-items: center;
+        border: 1px solid #dee2e6;
+        border-radius: 50px; /* Borda bem redonda */
+        overflow: hidden; /* Garante que nada saia da borda */
+        background-color: #fff;
+        height: 38px; /* Altura fixa para consistência */
+    }
+
+    .quantity-pill { display: inline-flex; align-items: center; border: 1px solid #dee2e6; border-radius: 50px; overflow: hidden; background-color: #fff; height: 38px; }
+    .qty-btn { display: flex; align-items: center; justify-content: center; width: 35px; height: 100%; border: none; background: transparent; color: var(--dark-accent); text-decoration: none; transition: background 0.2s; font-size: 1.1rem; cursor: pointer; }
+    .qty-btn:hover { background-color: #f8f9fa; color: var(--primary-color); }
+    .qty-input { width: 40px; height: 100%; border: none; text-align: center; font-weight: 700; color: var(--text-color); font-size: 0.95rem; background: transparent; pointer-events: none; }
+    .qty-input::-webkit-outer-spin-button, .qty-input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
+
+    .btn-remove-item {
+        color: #dc3545;
+        border: none;
+        background: rgba(220, 53, 69, 0.1);
+        width: 35px; height: 35px;
+        border-radius: 50%;
+        display: flex; align-items: center; justify-content: center;
+        transition: all 0.2s;
+    }
+    .btn-remove-item:hover {
+        background: #dc3545; color: white; transform: rotate(90deg);
+    }
+</style>
+
+
+    <div class="container my-5">
+        
+        <div class="row">
+            <div class="col-12">
+                <ul class="checkout-timeline">
+                    <li class="timeline-step {% if step == 'carrinho' %}active{% endif %}">
+                        <div class="step-wrapper">
+                            <div class="step-icon"><i class="bi bi-cart"></i></div>
+                            <div class="step-label">Carrinho</div>
+                        </div>
+                    </li>
+                    <li class="timeline-step {% if step == 'pagamento' %}active{% endif %}">
+                        <div class="step-wrapper">
+                            <div class="step-icon"><i class="bi bi-credit-card"></i></div>
+                            <div class="step-label">Pagamento</div>
+                        </div>
+                    </li>
+                    <li class="timeline-step {% if step == 'confirmacao' %}active{% endif %}">
+                        <div class="step-wrapper">
+                            <div class="step-icon"><i class="bi bi-check-lg"></i></div>
+                            <div class="step-label">Confirmação</div>
+                        </div>
+                    </li>
+                </ul>
+            </div>
+        </div>
+        <div class="row">
+            <div class="col-12">
+                <h2 class="cart-title mb-4">Meu Carrinho</h2>
+            </div>
+        </div>
+        <div class="row">
+            <div class="col-lg-8">
+                <div class="cart-items-container">
+                    {% if carrinho %}
+                        {% for item in carrinho %}
+                        <div class="cart-item-card">
+                            <div class="row g-0">
+                                <div class="col-md-3 col-4">
+                                    <img src="{{ url_for('static', filename='images/' + item['imagem']) if item['imagem'] else 'https://via.placeholder.com/80' }}" class="img-fluid rounded-start" alt="{{ item['nome'] }}">
+                                </div>
+                                <div class="col-md-9 col-8">
+                                    <div class="card-body">
+                                        <div class="d-flex justify-content-between">
+                                            <h5 class="card-title">{{ item['nome'] }}</h5>
+                                            
+                                            <form action="{{ url_for('remover_carrinho', id=item['id']) }}" method="POST">
+                                            <button type="submit" class="btn-remove-item" title="Remover item">
+                                                <i class="bi bi-trash"></i>
+                                            </button>
+                                        </form>
+
+                                        </div>
+                                        <p class="card-text text-muted d-none d-md-block">{{ item['descricao'] }}</p>
+                                        <div class="d-flex justify-content-between align-items-center mt-3">
+                                            <span class="cart-item-price">R$ {{ "%.2f"|format(item['preco']) }} / un.</span>
+                                            
+                                        <div class="quantity-pill">
+                                            <a href="{{ url_for('atualizar_quantidade', id=item['id'], acao='diminuir') }}" class="qty-btn scroll-maintain">
+                                                <i class="bi bi-dash"></i>
+                                            </a>
+                                            
+                                            <input type="number" class="qty-input" value="{{ item['quantidade'] }}" readonly>
+                                            
+                                            <a href="{{ url_for('atualizar_quantidade', id=item['id'], acao='aumentar') }}" class="qty-btn scroll-maintain">
+                                                <i class="bi bi-plus"></i>
+                                            </a>
+                                        </div>
+                                            
+                                            <span class="cart-item-subtotal">
+                                                Subtotal: R$ {{ "%.2f"|format(item['preco'] * item['quantidade']) }}
+                                            </span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    {% else %}
+                        <div class="alert alert-info text-center" role="alert">
+                            <i class="bi bi-cart-x-fill fs-3 d-block mb-2"></i>
+                            Seu carrinho está vazio.
+                            <a href="{{ url_for('index') }}" class="alert-link">Que tal começar a comprar?</a>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <div class="col-lg-4">
+                <div class="summary-card">
+                    <h3 class="summary-title">Resumo do Pedido</h3>
+                    <ul class="list-group list-group-flush">
+                        <li class="list-group-item d-flex justify-content-between">
+                            <span>Subtotal</span>
+                            <span>R$ {{ "%.2f"|format(total) }}</span>
+                        </li>
+                        
+                        <li class="list-group-item d-flex justify-content-between">
+                            <span>Frete</span>
+                            <span>
+                                {% if frete_label == 'Frete Grátis' %}
+                                    <strong class="text-success">Frete Grátis</strong>
+                                {% else %}
+                                    {% if frete > 0 %}R$ {{ "%.2f"|format(frete) }}{% else %}A calcular{% endif %}
+                                {% endif %}
+                            </span>
+                        </li>
+                        
+                        <li class="list-group-item d-flex justify-content-between total">
+                            <span>Total</span>
+                            <span>R$ {{ "%.2f"|format(total_com_frete) }}</span>
+                        </li>
+                    </ul>
+
+                    <form action="{{ url_for('calcular_frete') }}" method="POST" class="mt-4">
+                        <label for="cep" class="form-label fw-bold">Calcular Frete:</label>
+                        <fieldset {% if not carrinho or frete_label == 'Frete Grátis' %}disabled{% endif %}> 
+                            <div class="input-group">
+                                <input type="text" class="form-control" name="cep" id="cep" placeholder="00000-000" required>
+                                <button type="submit" class="btn btn-outline-secondary">Calcular</button>
+                            </div>
+                        </fieldset>
+                    </form>
+                    
+                    <a href="{{ url_for('checkout_pagamento') }}" class="btn btn-checkout w-100 mt-4 
+                        {% if not carrinho %}disabled{% endif %}" >
+                        <span>Ir para Pagamento</span> <i class="bi bi-arrow-right"></i>
+                    </a>
+                    
+                    {% if not carrinho %}
+                    <small class="d-block text-center text-danger mt-2">
+                        Carrinho vazio.
+                    </small>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+<script>
+document.getElementById('cep').addEventListener('input', function (e) {
+    var v = e.target.value.replace(/\D/g, '');
+    v = v.replace(/^(\d{5})(\d)/, '$1-$2');
+    e.target.value = v.slice(0, 9);
+});
+
+const scrollLinks = document.querySelectorAll('.scroll-maintain');
+    scrollLinks.forEach(link => {
+        link.addEventListener('click', function() {
+            sessionStorage.setItem('scrollPos', window.scrollY);
+        });
+    });
+
+    // Restaura a posição ao recarregar
+const scrollPos = sessionStorage.getItem('scrollPos');
+    if (scrollPos) {
+        window.scrollTo(0, scrollPos);
+        sessionStorage.removeItem('scrollPos');
+    }
+
+</script>
+{% endblock %}

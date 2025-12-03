@@ -1,0 +1,239 @@
+{% extends 'base.html' %}
+{% block title %}Minha Conta - Lumina Beauty{% endblock %}
+
+{% block content %}
+<div class="container my-5">
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            
+            <div class="form-container-card mb-4">
+                <h2 class="form-title mb-4">Meus Dados</h2>
+                <form method="POST" action="{{ url_for('minha_conta') }}">
+                    <input type="hidden" name="form_type" value="update_profile">
+                    
+                    <div class="mb-3">
+                        <label for="nome" class="form-label">Nome Completo</label>
+                        <input type="text" class="form-control" id="nome" name="nome" value="{{ user.nome }}" required>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="username" class="form-label">Nome de Utilizador</label>
+                        <input type="text" class="form-control" id="username" value="{{ user.username }}" disabled>
+                        <div class="form-text">O nome de utilizador não pode ser alterado.</div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="email" class="form-label">E-mail</label>
+                        <input type="email" class="form-control" id="email" name="email" value="{{ user.email }}" required>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="telefone" class="form-label">Telefone</label>
+                        <input type="tel" class="form-control" id="telefone" name="telefone" 
+                            value="{{ user.telefone if user.telefone else '' }}">
+                    </div>
+
+                    {% if user.papel == 'cliente' %}
+                        <div class="mb-4">
+                            <label for="endereco" class="form-label">Endereço de Entrega</label>
+                            
+                            <div class="input-group mb-2">
+                                <span class="input-group-text"><i class="bi bi-geo-alt"></i></span>
+                                <input type="text" class="form-control" id="endereco" name="endereco" value="{{ user.endereco }}" placeholder="Arraste o pino no mapa ou digite aqui..." required>
+                            </div>
+
+                            <div class="card shadow-sm">
+                                <div class="card-body p-1">
+                                    <div id="mapaSelecao" style="height: 300px; width: 100%; border-radius: 4px; z-index: 1;"></div>
+                                </div>
+                                <div class="card-footer bg-light py-1 text-center">
+                                    <small class="text-muted"><i class="bi bi-arrows-move me-1"></i> Arraste o pino azul para definir seu endereço.</small>
+                                </div>
+                            </div>
+                        </div>
+
+                        <script>
+                            document.addEventListener('DOMContentLoaded', function() {
+                                // 1. Configuração Inicial (Padrão: São Paulo ou centro do Brasil se não tiver GPS)
+                                var latInicial = -23.550520;
+                                var lngInicial = -46.633308;
+                                
+                                // Cria o mapa
+                                var map = L.map('mapaSelecao').setView([latInicial, lngInicial], 13);
+
+                                // Adiciona os "azulejos" do OpenStreetMap (Visual do mapa)
+                                L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                                    attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+                                }).addTo(map);
+
+                                // Ícone personalizado (Opcional, mas fica mais bonito)
+                                var iconePino = L.icon({
+                                    iconUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png',
+                                    shadowUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png',
+                                    iconSize: [25, 41],
+                                    iconAnchor: [12, 41],
+                                    popupAnchor: [1, -34],
+                                    shadowSize: [41, 41]
+                                });
+
+                                // 2. Adiciona o Marcador (Pino)
+                                var marker = L.marker([latInicial, lngInicial], {
+                                    draggable: true, // Permite arrastar
+                                    icon: iconePino
+                                }).addTo(map);
+
+                                // 3. Tenta pegar a localização real do usuário
+                                if (navigator.geolocation) {
+                                    navigator.geolocation.getCurrentPosition(function(position) {
+                                        var lat = position.coords.latitude;
+                                        var lng = position.coords.longitude;
+                                        map.setView([lat, lng], 16);
+                                        marker.setLatLng([lat, lng]);
+                                        atualizarEndereco(lat, lng); // Já preenche o endereço onde ele está
+                                    });
+                                }
+
+                                // 4. Função: Quando soltar o pino, busca o endereço (Geocoding Reverso)
+                                marker.on('dragend', function(event) {
+                                    var position = marker.getLatLng();
+                                    atualizarEndereco(position.lat, position.lng);
+                                });
+
+                                // Função que chama a API do Nominatim (OpenStreetMap) para pegar o nome da rua
+                                function atualizarEndereco(lat, lng) {
+                                    var inputEndereco = document.getElementById('endereco');
+                                    inputEndereco.value = "Buscando endereço..."; // Feedback visual
+                                    
+                                    // URL da API gratuita
+                                    var url = `https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=${lat}&lon=${lng}`;
+
+                                    fetch(url)
+                                        .then(response => response.json())
+                                        .then(data => {
+                                            if (data && data.display_name) {
+                                                // Formata o endereço (pega rua, número, bairro, cidade)
+                                                // A API retorna um display_name longo, vamos tentar simplificar ou usar ele todo
+                                                let enderecoCompleto = data.display_name;
+                                                
+                                                // Se quiser tentar pegar partes específicas (Rua + Número):
+                                                // let rua = data.address.road || '';
+                                                // let numero = data.address.house_number || '';
+                                                // let bairro = data.address.suburb || data.address.neighbourhood || '';
+                                                // let cidade = data.address.city || data.address.town || '';
+                                                
+                                                inputEndereco.value = enderecoCompleto;
+                                            } else {
+                                                inputEndereco.value = "Endereço não encontrado. Digite manualmente.";
+                                            }
+                                        })
+                                        .catch(err => {
+                                            console.error("Erro ao buscar endereço:", err);
+                                            inputEndereco.value = ""; // Deixa o usuário digitar se der erro
+                                        });
+                                }
+                            });
+                        </script>
+                    {% endif %}
+                    
+                    <button type="submit" class="btn btn-primary w-100 mt-3">Salvar Alterações</button>
+                </form>
+            </div>
+
+            <div class="form-container-card mb-4">
+                <h2 class="form-title mb-4">Segurança</h2>
+                <form method="POST" action="{{ url_for('minha_conta') }}">
+                    <input type="hidden" name="form_type" value="change_password">
+
+                    <div class="mb-3">
+                        <label for="senha_antiga" class="form-label">Senha Atual</label>
+                        <input type="password" class="form-control" id="senha_antiga" name="senha_antiga" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="nova_senha" class="form-label">Nova Senha</label>
+                        <input type="password" class="form-control" id="nova_senha" name="nova_senha" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="confirmar_senha" class="form-label">Confirmar Nova Senha</label>
+                        <input type="password" class="form-control" id="confirmar_senha" name="confirmar_senha" required>
+                    </div>
+                    
+                    <button type="submit" class="btn btn-primary w-100 mt-3">Alterar Senha</button>
+                </form>
+            </div>
+
+            <div class="form-container-card border-danger">
+                <h2 class="form-title mb-4 text-danger">Zona de Perigo</h2>
+                
+                <p>Ao remover a sua conta, todos os seus dados serão permanentemente apagados. Esta ação não pode ser desfeita.</p>
+
+                <style>
+                    .btn-animate {
+                        transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+                    }
+                    .btn-animate:hover {
+                        transform: translateY(-3px); /* Sobe ligeiramente */
+                        box-shadow: 0 5px 15px rgba(0,0,0,0.15); /* Cria sombra */
+                    }
+                    .btn-danger.btn-animate:hover {
+                        box-shadow: 0 5px 15px rgba(220, 53, 69, 0.4); /* Sombra avermelhada para botões de perigo */
+                    }
+                </style>
+
+                {% if user.papel == 'admin' %}
+                    
+                    <div class="alert alert-warning d-flex align-items-center mb-3" role="alert">
+                        <i class="bi bi-shield-lock-fill me-2 fs-5"></i>
+                        <div>
+                            <strong>Bloqueado:</strong> Administradores não podem excluir a própria conta aqui.
+                        </div>
+                    </div>
+                    
+                    <button type="button" class="btn btn-secondary w-100" disabled style="cursor: not-allowed; opacity: 0.7;">
+                        <i class="bi bi-slash-circle me-2"></i> Remover Minha Conta
+                    </button>
+
+                {% else %}
+                    
+                    <button type="button" class="btn btn-danger w-100 btn-animate" data-bs-toggle="modal" data-bs-target="#modalExcluirConta">
+                        <i class="bi bi-trash3-fill me-2"></i> Remover Minha Conta
+                    </button>
+
+                    <div class="modal fade" id="modalExcluirConta" tabindex="-1" aria-labelledby="modalExcluirLabel" aria-hidden="true">
+                        <div class="modal-dialog modal-dialog-centered">
+                            <div class="modal-content border-0 shadow-lg"> <div class="modal-header border-0">
+                                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                </div>
+                                
+                                <div class="modal-body text-center px-5 pb-5">
+                                    <div class="text-danger mb-3">
+                                        <i class="bi bi-exclamation-triangle-fill animate__animated animate__heartBeat" style="font-size: 4rem;"></i>
+                                    </div>
+                                    
+                                    <h3 class="mb-3 fw-bold">Tem certeza absoluta?</h3>
+                                    <p class="text-muted mb-4">
+                                        Ao excluir sua conta, todos os seus dados, histórico de compras e informações pessoais serão <strong>permanentemente apagados</strong>.
+                                    </p>
+
+                                    <div class="d-flex justify-content-center gap-3">
+                                        <button type="button" class="btn btn-outline-secondary px-4 py-2 btn-animate" data-bs-dismiss="modal">
+                                            Cancelar
+                                        </button>
+                                        
+                                        <form method="POST" action="{{ url_for('excluir_conta') }}">
+                                            <button type="submit" class="btn btn-danger px-4 py-2 fw-bold btn-animate">
+                                                Sim, excluir tudo
+                                            </button>
+                                        </form>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                {% endif %}
+            </div>
+            
+        </div>
+    </div>
+</div>
+{% endblock %}

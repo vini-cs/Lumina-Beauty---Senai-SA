@@ -1,0 +1,229 @@
+{% extends 'base.html' %}
+{% block title %}Crie sua Conta - Lumina Beauty{% endblock %}
+{% block content %}
+
+
+<style>
+/* 1. REMOVE O OLHO PADRÃO DO NAVEGADOR (Edge/IE) */
+input::-ms-reveal,
+    input::-ms-clear {
+        display: none !important;
+    }
+
+    /* 2. REMOVE O ÍCONE DE ERRO/VALIDAÇÃO DO BOOTSTRAP */
+    .form-control.is-invalid {
+        background-image: none !important; /* Remove a exclamação */
+        border-color: #d63384; /* Mantém a borda rosa */
+        padding-right: 45px !important; /* Mantém espaço para o NOSSO olho */
+        box-shadow: 0 0 0 0.2rem rgba(214, 51, 132, 0.25);
+    }
+
+    /* 3. Container Wrapper para segurar Input + Ícone */
+    .input-wrapper {
+        position: relative;
+        width: 100%;
+    }
+
+    /* 4. Estilo do Input */
+    .form-control {
+        padding-right: 45px; /* Espaço para o ícone não cobrir o texto */
+    }
+
+    /* 5. SEU ÍCONE PERSONALIZADO (O Único que vai aparecer) */
+    .password-toggle {
+        position: absolute;
+        top: 50%;
+        right: 15px;
+        transform: translateY(-50%);
+        cursor: pointer;
+        color: #888;
+        z-index: 10;
+        font-size: 1.1rem;
+        transition: all .3s ease-in;
+    }
+    
+    .password-toggle:hover {
+        color: #d63384;
+    }
+
+    /* 6. Balão de erro (O mesmo de antes) */
+    .error-bubble {
+        display: none;
+        background-color: #fff0f3;
+        color: #a61e4d;
+        padding: 10px 15px;
+        border-radius: 8px;
+        border: 1px solid #fcc2d7;
+        font-size: 0.9rem;
+        margin-top: 8px;
+        box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+        animation: slideDown 0.3s ease-out forwards;
+        position: relative;
+    }
+    
+    /* Setinhas do balão */
+    .error-bubble::before { content: ''; position: absolute; top: -6px; left: 20px; border-left: 6px solid transparent; border-right: 6px solid transparent; border-bottom: 6px solid #fcc2d7; }
+    .error-bubble::after { content: ''; position: absolute; top: -5px; left: 21px; border-left: 5px solid transparent; border-right: 5px solid transparent; border-bottom: 5px solid #fff0f3; }
+
+    @keyframes slideDown { from { opacity: 0; transform: translateY(-10px); } to { opacity: 1; transform: translateY(0); } }
+</style>
+    <div class="container my-5">
+        <div class="row justify-content-center">
+            
+            <div class="col-lg-6">
+                
+                <div class="form-container-card p-4 p-md-5">
+                    <h2 class="form-title mb-4">Crie sua Conta</h2>
+                    <form id="formRegistro" method="POST" action="{{ url_for('registrar_cliente') }}" novalidate>
+    
+                        <div class="mb-3">
+                            <label for="nome" class="form-label">Nome Completo</label>
+                            <input type="text" class="form-control" id="nome" name="nome" required>
+                            <div class="error-bubble">Por favor, preencha seu nome.</div>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="username" class="form-label">Nome de Usuário</label>
+                            <input type="text" class="form-control" id="username" name="username" required>
+                            <div class="error-bubble">Escolha um nome de usuário.</div>
+                        </div>
+                    
+                        <div class="mb-3 position-relative">
+                            <label for="email" class="form-label">Email</label>
+                            <input type="email" class="form-control" id="email" name="email" 
+                                   placeholder="seuemail@provedor.com" required 
+                                   pattern="[a-z0-9._%+-]+@[a-z0-9.-]+\.[a-z]{2,}$">
+                            <div class="error-bubble" id="error-email">
+                                <i class="fas fa-exclamation-circle"></i> Digite um e-mail válido (ex: ana@gmail.com)
+                            </div>
+                        </div>
+                    
+                        <div class="mb-4">
+                            <label for="senha" class="form-label">Senha</label>
+                            
+                            <div class="input-wrapper">
+                                <input type="password" class="form-control" id="senha" name="senha" 
+                                       placeholder="Crie uma senha forte" required minlength="6">
+                                
+                                <i class="fas fa-eye password-toggle" id="togglePassword"></i>
+                            </div>
+                        
+                            <div class="error-bubble" id="error-senha">
+                                <i class="fas fa-lock"></i> A senha deve ter no mínimo 6 caracteres.
+                            </div>
+                        </div>
+                    
+                        <button type="submit" class="btn btn-register w-100 mt-3">Registrar</button>
+                        
+                        </form>
+                    
+                    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener("DOMContentLoaded", function() {
+        
+        // 1. CORREÇÃO DO REINÍCIO DE PÁGINA (F5)
+        if (window.history.replaceState) {
+            window.history.replaceState(null, null, window.location.href);
+        }
+
+        // 2. FECHAR ALERTAS DO TOPO AUTOMATICAMENTE
+        setTimeout(function() {
+            let alerts = document.querySelectorAll('.alert');
+            alerts.forEach(function(alert) {
+                if (typeof bootstrap !== 'undefined') {
+                    let bsAlert = new bootstrap.Alert(alert);
+                    bsAlert.close();
+                } else {
+                    alert.style.display = 'none';
+                }
+            });
+        }, 5000);
+
+        // --- LÓGICA DE VALIDAÇÃO ---
+        const form = document.getElementById('formRegistro');
+        const inputs = form.querySelectorAll('input');
+
+        // FUNÇÃO INTELIGENTE PARA ACHAR O BALÃO
+        function getBubble(input) {
+            // Tenta achar no pai imediato (Ex: Email)
+            let parent = input.parentElement;
+            let bubble = parent.querySelector('.error-bubble');
+
+            // Se não achou e o pai for o wrapper (Ex: Senha), procura no "avô"
+            if (!bubble && parent.classList.contains('input-wrapper')) {
+                bubble = parent.parentElement.querySelector('.error-bubble');
+            }
+            return bubble;
+        }
+
+        function showCustomError(input, message = null) {
+            const bubble = getBubble(input);
+            
+            input.classList.add('is-invalid');
+            
+            if (bubble) {
+                bubble.style.display = 'block';
+                if (message) {
+                    bubble.innerHTML = '<i class="fas fa-exclamation-circle"></i> ' + message;
+                }
+            }
+        }
+
+        function clearCustomError(input) {
+            const bubble = getBubble(input);
+            
+            input.classList.remove('is-invalid');
+            
+            if (bubble) {
+                bubble.style.display = 'none';
+            }
+        }
+
+        // EVENTOS DO FORMULÁRIO
+        form.addEventListener('submit', function(event) {
+            let isValid = true;
+            inputs.forEach(input => {
+                if (!input.checkValidity()) {
+                    event.preventDefault();
+                    showCustomError(input);
+                    isValid = false;
+                }
+            });
+            if (!isValid) {
+                const firstInvalid = form.querySelector('.is-invalid');
+                if (firstInvalid) firstInvalid.focus();
+            }
+        });
+
+        inputs.forEach(input => {
+            input.addEventListener('input', function() {
+                if (input.checkValidity()) clearCustomError(input);
+            });
+            input.addEventListener('blur', function() {
+                if (!input.checkValidity()) showCustomError(input);
+            });
+        });
+
+        // --- LÓGICA DO OLHO (VER SENHA) ---
+        const togglePassword = document.querySelector('#togglePassword');
+        const passwordInput = document.querySelector('#senha');
+
+        if (togglePassword && passwordInput) {
+            togglePassword.addEventListener('click', function () {
+                const type = passwordInput.getAttribute('type') === 'password' ? 'text' : 'password';
+                passwordInput.setAttribute('type', type);
+                
+                this.classList.toggle('fa-eye');
+                this.classList.toggle('fa-eye-slash');
+            });
+        }
+    });
+    </script>
+
+{% endblock %}

@@ -1,0 +1,90 @@
+{% extends 'base.html' %}
+{% block title %}Pagamento - Lumina Beauty{% endblock %}
+
+{% block content %}
+<div class="container my-5">
+    
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            {% for category, message in messages %}
+                <div class="alert alert-{{ category }} alert-dismissible fade show" role="alert">
+                    {{ message }}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                </div>
+            {% endfor %}
+        {% endif %}
+    {% endwith %}
+
+    <div class="row">
+        <div class="col-12">
+            <ul class="checkout-timeline">
+                <li class="timeline-step active">
+                    <div class="step-wrapper">
+                        <div class="step-icon"><i class="bi bi-cart"></i></div>
+                        <div class="step-label">Carrinho</div>
+                    </div>
+                </li>
+                <li class="timeline-step {% if step == 'pagamento' %}active{% endif %}">
+                    <div class="step-wrapper">
+                        <div class="step-icon"><i class="bi bi-credit-card"></i></div>
+                        <div class="step-label">Pagamento</div>
+                    </div>
+                </li>
+                <li class="timeline-step {% if step == 'confirmacao' %}active{% endif %}">
+                    <div class="step-wrapper">
+                        <div class="step-icon"><i class="bi bi-check-lg"></i></div>
+                        <div class="step-label">Confirmação</div>
+                    </div>
+                </li>
+            </ul>
+        </div>
+    </div>
+    <div class="row justify-content-center">
+        <div class="col-lg-7">
+            <div class="form-container-card">
+                
+                <div>
+                    <a href="{{ url_for('ver_carrinho') }}" class="btn btn-nav-voltar">
+                        <i class="bi bi-arrow-left me-2"></i> Voltar ao Carrinho
+                    </a>
+                </div>
+                <br>
+
+                <h2 class="form-title mb-4">Escolha a forma de Pagamento</h2>
+                <p class="text-center fs-5">Total a pagar: <strong class="ms-2" style="color: var(--gold-color);">R$ {{ "%.2f"|format(total) }}</strong></p>
+
+                <hr class="my-4">
+
+                <div class="d-grid gap-3">
+                    <a href="{{ url_for('pagar_pix') }}" class="btn btn-primary btn-lg p-3 pagamento-btn">
+                        <i class="bi bi-qr-code me-2"></i> Pagar com Pix (Simulação)
+                    </a>
+                    <a href="{{ url_for('pagamento_cartao') }}" class="btn btn-secondary-custom btn-lg p-3 pagamento-btn">
+                        <i class="bi bi-credit-card-fill me-2"></i> Pagar com Cartão de Crédito (Simulação)
+                    </a>
+                </div>
+
+                <div class="alert alert-warning mt-4">
+                    <i class="bi bi-info-circle-fill me-2"></i>
+                    <strong>Ambiente de Simulação:</strong> Nenhum pagamento real será processado.
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.pagamento-btn {
+    transition: all 0.3s ease;
+}
+
+.pagamento-btn:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 8px 20px rgba(107, 73, 80, 0.2) !important;
+}
+
+.pagamento-btn:active {
+    transform: translateY(-1px);
+}
+</style>
+{% endblock %}

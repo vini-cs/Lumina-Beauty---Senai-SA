@@ -1,0 +1,73 @@
+{% extends 'base.html' %}
+{% block title %}Pagar com Pix - Lumina Beauty{% endblock %}
+
+{% block content %}
+<div class="container my-5">
+
+    <div class="row">
+        <div class="col-12">
+            <ul class="checkout-timeline">
+                <li class="timeline-step active">
+                    <div class="step-wrapper">
+                        <div class="step-icon"><i class="bi bi-cart"></i></div>
+                        <div class="step-label">Carrinho</div>
+                    </div>
+                </li>
+                <li class="timeline-step {% if step == 'pagamento' %}active{% endif %}">
+                    <div class="step-wrapper">
+                        <div class="step-icon"><i class="bi bi-credit-card"></i></div>
+                        <div class="step-label">Pagamento</div>
+                    </div>
+                </li>
+                <li class="timeline-step {% if step == 'confirmacao' %}active{% endif %}">
+                    <div class="step-wrapper">
+                        <div class="step-icon"><i class="bi bi-check-lg"></i></div>
+                        <div class="step-label">Confirmação</div>
+                    </div>
+                </li>
+            </ul>
+        </div>
+    </div>
+    <div class="row justify-content-center">
+        <div class="col-lg-7 text-center">
+            <div class="form-container-card">
+
+                <div>
+                    <a href="{{ url_for('checkout_pagamento') }}" class="btn btn-nav-voltar">
+                        <i class="bi bi-arrow-left me-2"></i> Voltar às Opções
+                    </a>
+                </div>
+
+                <h2 class="form-title mb-2">Pagar com Pix</h2>
+                <p class="fs-4">Total: <strong class="ms-2" style="color: var(--gold-color);">R$ {{ "%.2f"|format(total) }}</strong></p>
+                <p>Abra o app do seu banco e escaneie o QR Code abaixo:</p>
+
+                <img src="data:image/png;base64,{{ qr_code_base64 }}" alt="QR Code Pix Simulado" class="img-fluid rounded border shadow-sm my-3" style="max-width: 300px;">
+
+                <h5 class="mt-3">Ou use o Pix Copia e Cola:</h5>
+                <div class="input-group mb-3">
+                    <input type="text" class="form-control" value="{{ pix_key }}" readonly id="pixKeyInput">
+                    <button class="btn btn-outline-secondary" type="button" onclick="copiarPix()">Copiar</button>
+                </div>
+
+                <div class="alert alert-info mt-4">
+                    Este é um QR Code de <strong>simulação</strong>.
+                </div>
+
+                <a href="{{ url_for('checkout_confirmacao') }}" class="btn btn-primary btn-lg w-100 mt-3">
+                    Já Paguei (Simular Aprovação)
+                </a>
+            </div>
+        </div>
+    </div>
+
+<script>
+function copiarPix() {
+    var copyText = document.getElementById("pixKeyInput");
+    copyText.select();
+    copyText.setSelectionRange(0, 99999);
+    navigator.clipboard.writeText(copyText.value);
+    alert("Chave Pix copiada!");
+}
+</script>
+{% endblock %}

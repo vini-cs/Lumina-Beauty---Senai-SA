@@ -1,0 +1,55 @@
+{% extends 'base.html' %}
+{% block title %}Contato - Lumina Beauty{% endblock %}
+{% block content %}
+    <div class="container my-5">
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                    <div class="alert alert-{{ category }} alert-dismissible fade show" role="alert">
+                        {{ message }}
+                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                    </div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+
+        <div class="row">
+            <div class="col-12 text-center mb-5">
+                <h2 class="contact-title">Fale Conosco</h2>
+                <p class="contact-subtitle">Estamos aqui para ajudar! Escolha seu canal de atendimento preferido.</p>
+            </div>
+        </div>
+        <div class="row g-4 justify-content-center">
+            <div class="col-lg-6">
+                <div class="form-card h-100 p-lg-5">
+                    <h4 class="mb-4" style="font-weight: 600;">Nossos Canais</h4>
+                    <ul class="list-unstyled contact-info-list">
+                        <li class="d-flex align-items-center mb-3">
+                            <span class="contact-icon"><i class="bi bi-envelope-fill"></i></span>
+                            <span>atendimento@luminabeauty.com</span>
+                        </li>
+                        <li class="d-flex align-items-center mb-3">
+                            <span class="contact-icon"><i class="bi bi-telephone-fill"></i></span>
+                            <span>(47) 3333-4444</span>
+                        </li>
+                        <li class="d-flex align-items-center">
+                            <span class="contact-icon"><i class="bi bi-geo-alt-fill"></i></span>
+                            <span>Rua da Beleza, 123 - Joinville, SC</span>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+            <div class="col-lg-6">
+                <div class="form-card h-100 text-center d-flex flex-column justify-content-center align-items-center p-lg-5">
+                    <i class="bi bi-whatsapp whatsapp-icon-large mb-3"></i>
+                    <h4 class="mb-3" style="font-weight: 600;">Atendimento Rápido</h4>
+                    <p class="mb-4">Prefere uma resposta imediata? Clique no botão abaixo e fale connosco diretamente pelo WhatsApp!</p>
+                    <a href="https://wa.me/5547999998888" target="_blank" class="btn-main-action">
+                        <i class="bi bi-whatsapp me-2"></i>
+                        Iniciar Conversa
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock %}

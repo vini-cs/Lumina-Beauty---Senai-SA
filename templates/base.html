@@ -1,0 +1,1180 @@
+<!DOCTYPE html>
+<html lang="pt-br" style="font-size: 16px;">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    
+    <title>{% block title %}Lumina Beauty{% endblock %}</title>
+    
+    <link rel="shortcut icon" href="{{ url_for('static', filename='images/Logo_Lumina-removebg-preview.png') }}">
+    
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+    
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Quicksand:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin=""/>
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: "Quicksand", sans-serif;
+            background-color: var(--light-bg);
+        }
+
+
+        /* Container fixo que fica sobre tudo (z-index alto) */
+        #flash-overlay-container {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 999999;
+            width: 350px;
+            max-width: 90vw;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            pointer-events: none;
+        }
+
+        /* O balão individual */
+        .alert-floating {
+            pointer-events: auto;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+            border: none;
+            border-left: 5px solid rgba(0,0,0,0.1);
+            backdrop-filter: blur(5px);
+            opacity: 0.98;
+            animation: slideInFloat 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+            position: relative;
+            overflow: hidden;
+            padding-bottom: 14px;
+        }
+
+        /* Animação de entrada */
+        @keyframes slideInFloat {
+            from {
+                opacity: 0;
+                transform: translateX(50px) scale(0.9);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(0) scale(1);
+            }
+        }
+
+        /* Animação de saída */
+        @keyframes slideOutFloat {
+            from {
+                opacity: 1;
+                transform: translateX(0) scale(1);
+            }
+            to {
+                opacity: 0;
+                transform: translateX(50px) scale(0.9);
+            }
+        }
+
+        /* Barra de progresso */
+        .alert-progress-bar {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            height: 3px;
+            background: linear-gradient(90deg, #f9f0f2 20%, #e8b8c2 100%);
+            animation: progressBar 5s linear forwards;
+            border-radius: 2px;
+        }
+
+        /* Animação da barra */
+        @keyframes progressBar {
+            from {
+                width: 0%;
+            }
+            to {
+                width: 100%;
+            }
+        }
+
+        /* Estado de saída */
+        .alert-floating.closing {
+            animation: slideOutFloat 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+        }
+
+        /* Teste - container de exemplos */
+        .test-container {
+            padding: 20px;
+            background: #f5f5f5;
+            border-radius: 10px;
+        }
+
+        
+        
+    </style>
+</head>
+<body id="page-top">
+
+    <div id="flash-overlay-container">
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                    <div class="alert alert-{{ category }} alert-floating alert-dismissible fade show bg-white" role="alert">
+                        {% if category == 'success' %}<i class="bi bi-check-circle-fill text-success me-2"></i>{% endif %}
+                        {% if category == 'danger' %}<i class="bi bi-exclamation-triangle-fill text-danger me-2"></i>{% endif %}
+                        {% if category == 'warning' %}<i class="bi bi-exclamation-circle-fill text-warning me-2"></i>{% endif %}
+                        {% if category == 'info' %}<i class="bi bi-info-circle-fill text-info me-2"></i>{% endif %}
+                        
+                        {{ message }}
+                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                    </div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+    </div>
+
+    <a href="#main-content" class="skip-to-content">Pular para o Conteúdo</a>
+    
+    <nav class="navbar navbar-light bg-light sticky-top shadow-sm px-3 app-header">
+        
+        <button class="navbar-toggler" type="button" data-bs-toggle="offcanvas" data-bs-target="#menuOffcanvas" aria-controls="menuOffcanvas">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+
+        <a class="navbar-brand-centered" href="{{ url_for('index') }}">
+            <img src="{{ url_for('static', filename='images/lumina.png') }}" alt="Lumina Beauty Logo" height="60">
+            Lumina Beauty
+        </a>
+
+        <div class="navbar-right-cluster d-flex align-items-center gap-3">
+            
+            <a class="nav-link position-relative" href="{{ url_for('ver_carrinho') }}" title="Meu Carrinho">
+                <i class="bi bi-bag fs-4"></i>
+                {% if total_itens_carrinho > 0 %}
+                    <span class="badge bg-danger rounded-pill position-absolute top-0 start-100 translate-middle" style="font-size: 0.7rem; padding: 4px 6px;">
+                        {{ total_itens_carrinho }}
+                    </span>
+                {% endif %}
+            </a>
+
+            {% if user_info.logado %}
+                <div class="nav-item dropdown">
+                    <a class="nav-link dropdown-toggle" href="#" id="navbarUserDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false" title="Minha Conta">
+                        <i class="bi bi-person-circle fs-4"></i>
+                    </a>
+                    <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="navbarUserDropdown">
+                        <li><span class="dropdown-header">Olá, {{ user_info.nome }}</span></li>
+                        <li><a class="dropdown-item" href="{{ url_for('minha_conta') }}">Minha Conta</a></li>
+                        {% if user_info.papel == 'admin' %}
+                            <li><a class="dropdown-item" href="{{ url_for('admin_produtos') }}">Painel Admin</a></li>
+                        {% endif %}
+                        <li>
+                            <a class="dropdown-item" href="{{ url_for('meus_pedidos') }}">
+                                 Meus Pedidos
+                            </a>
+                        </li>
+                        <li><hr class="dropdown-divider"></li>
+                        <li><a class="dropdown-item" href="{{ url_for('logout') }}">Sair (Logout)</a></li>
+                    </ul>
+                </div>
+            {% else %}
+                <a class="nav-link" href="{{ url_for('login') }}" title="Login / Registrar">
+                    <i class="bi bi-person fs-4"></i>
+                </a>
+            {% endif %}
+
+        </div>
+    </nav>
+
+    <div class="offcanvas offcanvas-start" tabindex="-1" id="menuOffcanvas" aria-labelledby="menuOffcanvasLabel">
+        <div class="offcanvas-header">
+            <h5 class="offcanvas-title" id="menuOffcanvasLabel">Lumina Beauty</h5>
+            <button type="button" class="btn-close text-reset" data-bs-dismiss="offcanvas" aria-label="Close"></button>
+        </div>
+        <div class="offcanvas-body">
+            <ul class="navbar-nav">
+                <li class="nav-item">
+                    <a class="nav-link" href="{{ url_for('index') }}">
+                        <i class="bi bi-house-door-fill me-2"></i> Home
+                    </a>
+                </li>
+                
+                <li class="nav-item dropdown">
+                    <a class="nav-link dropdown-toggle" href="#" id="offcanvasCategorias" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                        <i class="bi bi-tag-fill me-2"></i> Categorias
+                    </a>
+                    <ul class="dropdown-menu" aria-labelledby="offcanvasCategorias">
+                        <li><a class="dropdown-item" href="{{ url_for('categoria_produtos', nome_categoria='rosto') }}">Rosto</a></li>
+                        <li><a class="dropdown-item" href="{{ url_for('categoria_produtos', nome_categoria='olhos') }}">Olhos</a></li>
+                        <li><a class="dropdown-item" href="{{ url_for('categoria_produtos', nome_categoria='labios') }}">Lábios</a></li>
+                        <li><a class="dropdown-item" href="{{ url_for('categoria_produtos', nome_categoria='skincare') }}">Skincare</a></li>
+                        <li><a class="dropdown-item" href="{{ url_for('categoria_produtos', nome_categoria='pinceis') }}">Pincéis</a></li>
+                        <li><hr class="dropdown-divider"></li>
+                        <li><a class="dropdown-item" href="{{ url_for('categoria_produtos', nome_categoria='kits') }}">Kits</a></li>
+                    </ul>
+                </li>
+                
+                <li class="nav-item">
+                    <a class="nav-link" href="{{ url_for('quiz') }}">
+                        <i class="bi bi-patch-question-fill me-2"></i> Quiz de Maquiagem
+                    </a>
+                </li>
+
+                <li class="nav-item">
+                    <a class="nav-link" href="{{ url_for('contato') }}">
+                        <i class="bi bi-envelope-fill me-2"></i> Contato
+                    </a>
+                </li>
+                
+                <li class="nav-item">
+                    <a class="nav-link" href="{{ url_for('novidades') }}">
+                        <i class="bi bi-star-fill me-2"></i> Novidades
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="{{ url_for('promocoes') }}">
+                        <i class="bi bi-percent me-2"></i> Promoções
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="{{ url_for('avaliacoes') }}">
+                        <i class="bi bi-chat-right-quote me-2"></i> Avaliações
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="{{ url_for('sobre') }}">
+                        <i class="bi bi-gem me-2"></i> Sobre
+                    </a>
+                </li>
+            </ul>
+        </div>
+    </div>
+
+    <div class="main-content-area flex-grow-1 p-0" id="main-content">
+        {% block content %}{% endblock %}
+    </div>
+
+    
+
+<!-- SCROLL TO TOP BUTTON -->
+
+
+    <button class="chatbot-toggler" id="chatbot-toggler">
+        <span class="bi bi-chat-dots-fill"></span>
+        <span class="bi bi-x-lg"></span>
+    </button>
+
+    <div class="chatbot">
+        <header>
+            <h2>Lumina Bot</h2>
+            <span class="close-btn material-symbols-outlined">close</span>
+        </header>
+        <ul class="chatbox" id="chatbox">
+            <li class="chat incoming">
+                <span class="bi bi-robot"></span>
+                <p>Olá! 👋 Bem-vinda à Lumina Beauty. Como posso ajudar você hoje?</p>
+            </li>
+        </ul>
+        <div class="chat-input">
+            <textarea id="chat-textarea" placeholder="Escreva uma mensagem..." required></textarea>
+            <span id="send-btn" class="bi bi-send-fill"></span>
+        </div>
+    </div>
+
+    <div class="accessibility-menu" id="acc-menu">
+        <h5>Acessibilidade</h5>
+        
+        <div class="acc-group">
+            <h6>Tamanho da Fonte</h6>
+            <div class="btn-group" role="group">
+                <button type="button" class="btn btn-acc" id="acc-font-decrease" title="Diminuir Fonte">
+                    <i class="bi bi-zoom-out"></i> A-
+                </button>
+                <button type="button" class="btn btn-acc" id="acc-font-increase" title="Aumentar Fonte">
+                    <i class="bi bi-zoom-in"></i> A+
+                </button>
+            </div>
+        </div>
+        
+        <div class="acc-group">
+            <h6>Ajustes de Tela</h6>
+            <div class="d-grid gap-2">
+                <button type="button" class="btn btn-acc" id="acc-high-contrast" data-acc-toggle="acc-high-contrast">
+                    <i class="bi bi-circle-half"></i> Alto Contraste
+                </button>
+                <button type="button" class="btn btn-acc" id="acc-grayscale" data-acc-toggle="acc-grayscale">
+                    <i class="bi bi-palette-fill"></i> Escala de Cinza
+                </button>
+                 <button type="button" class="btn btn-acc" id="acc-big-cursor" data-acc-toggle="acc-big-cursor">
+                    <i class="bi bi-cursor-fill"></i> Cursor Maior
+                </button>
+            </div>
+        </div>
+
+        <div class="acc-group">
+            <h6>Ajustes de Conteúdo</h6>
+            <div class="d-grid gap-2">
+                <button type="button" class="btn btn-acc" id="acc-underline-links" data-acc-toggle="acc-underline-links">
+                    <i class="bi bi-link-45deg"></i> Sublinhar Links
+                </button>
+                <button type="button" class="btn btn-acc" id="acc-highlight-links" data-acc-toggle="acc-highlight-links">
+                    <i class="bi bi-highlighter"></i> Destacar Links
+                </button>
+                <button type="button" class="btn btn-acc" id="acc-dyslexia" data-acc-toggle="acc-dyslexia-friendly">
+                    <i class="bi bi-fonts"></i> Fonte Amigável
+                </button>
+                <button type="button" class="btn btn-acc" id="acc-stop-animations" data-acc-toggle="acc-stop-animations">
+                    <i class="bi bi-pause-circle"></i> Parar Animações
+                </button>
+            </div>
+        </div>
+        
+        <button type="button" class="btn btn-acc-reset w-100 mt-2" id="acc-reset">
+            <i class="bi bi-arrow-counterclockwise me-2"></i> Resetar
+        </button>
+    </div>
+    
+    <button class="accessibility-widget" id="acc-widget" title="Acessibilidade" aria-controls="acc-menu" aria-expanded="false">
+        <i class="bi bi-universal-access"></i>
+    </button>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    
+    <script>
+    document.addEventListener('DOMContentLoaded', function() {
+    
+    // ==========================================
+    // 1. WIDGET DE ACESSIBILIDADE
+    // ==========================================
+    
+    const accWidget = document.getElementById('acc-widget');
+    const accMenu = document.getElementById('acc-menu');
+    const html = document.documentElement;
+    const body = document.body;
+    
+    const defaultFontSize = 16;
+    let currentFontSize = defaultFontSize;
+
+    accWidget.addEventListener('click', () => {
+        accMenu.classList.toggle('active');
+        accWidget.setAttribute('aria-expanded', accMenu.classList.contains('active'));
+    });
+
+    function setFontSize(size) {
+        currentFontSize = size;
+        html.style.fontSize = size + 'px';
+        localStorage.setItem('acc_fontSize', size);
+        
+        document.getElementById('acc-font-increase').disabled = currentFontSize >= 20;
+        document.getElementById('acc-font-decrease').disabled = currentFontSize <= 14;
+    }
+
+    function toggleBodyClass(className, buttonId) {
+        body.classList.toggle(className);
+        const isActive = body.classList.contains(className);
+        localStorage.setItem(className, isActive);
+        
+        if (buttonId) {
+            const btn = document.getElementById(buttonId);
+            if (isActive) {
+                btn.classList.add('active');
+                btn.setAttribute('aria-pressed', 'true');
+            } else {
+                btn.classList.remove('active');
+                btn.setAttribute('aria-pressed', 'false');
+            }
+        }
+        
+        if (className === 'acc-stop-animations') {
+            toggleCarousel(isActive);
+        }
+    }
+
+    function toggleCarousel(isPaused) {
+        const carouselEl = document.getElementById('heroCarousel');
+        if (carouselEl) {
+            try {
+                const carousel = bootstrap.Carousel.getOrCreateInstance(carouselEl);
+                if (isPaused) {
+                    carousel.pause();
+                } else {
+                    carousel.cycle();
+                }
+            } catch (e) {
+                console.warn("Não foi possível controlar o carrossel: ", e);
+            }
+        }
+    }
+
+    function initAccessibility() {
+        const savedSize = parseInt(localStorage.getItem('acc_fontSize'), 10);
+        if (savedSize && !isNaN(savedSize)) {
+            setFontSize(savedSize);
+        } else {
+            setFontSize(defaultFontSize);
+        }
+
+        const toggles = {
+            'acc-high-contrast': 'acc-high-contrast',
+            'acc-grayscale': 'acc-grayscale',
+            'acc-underline-links': 'acc-underline-links',
+            'acc-highlight-links': 'acc-highlight-links',
+            'acc-dyslexia-friendly': 'acc-dyslexia',
+            'acc-stop-animations': 'acc-stop-animations',
+            'acc-big-cursor': 'acc-big-cursor'
+        };
+        
+        for (const cls in toggles) {
+            if (localStorage.getItem(cls) === 'true') {
+                body.classList.add(cls);
+                const btn = document.getElementById(toggles[cls]);
+                if (btn) {
+                    btn.classList.add('active');
+                    btn.setAttribute('aria-pressed', 'true');
+                }
+            }
+        }
+        
+        if (body.classList.contains('acc-stop-animations')) {
+            setTimeout(() => toggleCarousel(true), 500);
+        }
+    }
+
+    document.getElementById('acc-font-increase').addEventListener('click', function() {
+        if (currentFontSize < 20) setFontSize(currentFontSize + 2);
+    });
+
+    document.getElementById('acc-font-decrease').addEventListener('click', function() {
+        if (currentFontSize > 14) setFontSize(currentFontSize - 2);
+    });
+
+    document.getElementById('acc-high-contrast').addEventListener('click', () => 
+        toggleBodyClass('acc-high-contrast', 'acc-high-contrast'));
+    
+    document.getElementById('acc-grayscale').addEventListener('click', () => 
+        toggleBodyClass('acc-grayscale', 'acc-grayscale'));
+    
+    document.getElementById('acc-underline-links').addEventListener('click', () => 
+        toggleBodyClass('acc-underline-links', 'acc-underline-links'));
+    
+    document.getElementById('acc-highlight-links').addEventListener('click', () => 
+        toggleBodyClass('acc-highlight-links', 'acc-highlight-links'));
+    
+    document.getElementById('acc-dyslexia').addEventListener('click', () => 
+        toggleBodyClass('acc-dyslexia-friendly', 'acc-dyslexia'));
+    
+    document.getElementById('acc-stop-animations').addEventListener('click', () => 
+        toggleBodyClass('acc-stop-animations', 'acc-stop-animations'));
+    
+    document.getElementById('acc-big-cursor').addEventListener('click', () => 
+        toggleBodyClass('acc-big-cursor', 'acc-big-cursor'));
+
+    document.getElementById('acc-reset').addEventListener('click', function() {
+        localStorage.clear();
+        location.reload();
+    });
+
+    initAccessibility();
+
+    // ==========================================
+    // 2. CHATBOT INTELIGENTE
+    // ==========================================
+    
+    const chatbotToggler = document.getElementById('chatbot-toggler');
+    const chatbox = document.getElementById('chatbox');
+    const chatInput = document.getElementById('chat-textarea');
+    const sendChatBtn = document.getElementById('send-btn');
+
+    // Base de produtos (simulação)
+    const produtos = [
+        { id: 1, nome: "Pó Compacto Translúcido", preco: 119.90, categoria: "rosto" },
+        { id: 2, nome: "Batom Líquido Cremoso", preco: 95.00, categoria: "labios" },
+        { id: 3, nome: "Lápis de Olho Retrátil", preco: 59.90, categoria: "olhos" },
+        { id: 4, nome: "Kit Completo Lumina", preco: 499.90, categoria: "kits" },
+        { id: 5, nome: "Sérum Hidratante", preco: 189.90, categoria: "skincare" },
+        { id: 6, nome: "Kit de Pincéis Profissional", preco: 299.90, categoria: "pinceis" }
+    ];
+
+    // Opções do menu principal
+    const botOptions = [
+        { text: "🛍️ Ver Produtos", action: "produtos" },
+        { text: "📦 Status do Pedido", action: "status" },
+        { text: "💄 Quiz de Maquiagem", action: "quiz" },
+        { text: "💬 Falar com Humano", action: "whatsapp" },
+        { text: "❓ Dúvidas Frequentes", action: "faq" }
+    ];
+
+    // Criar mensagem de chat
+    const createChatLi = (message, className) => {
+        const chatLi = document.createElement("li");
+        chatLi.classList.add("chat", className);
+        let content = className === "outgoing" 
+            ? `<p></p>` 
+            : `<span class="bi bi-robot"></span><p></p>`;
+        chatLi.innerHTML = content;
+        chatLi.querySelector("p").innerHTML = message; // Mudei para innerHTML para aceitar HTML
+        return chatLi;
+    }
+
+    // Verificar se está logado
+    const isUserLoggedIn = () => {
+        // Verifica se existe o elemento do usuário no navbar
+        return document.getElementById('navbarUserDropdown') !== null;
+    }
+
+    // Criar card de produto
+    const createProductCard = (produto) => {
+        const card = document.createElement("div");
+        card.classList.add("chat-product-card");
+        card.innerHTML = `
+            <div class="product-info">
+                <div class="product-name">${produto.nome}</div>
+                <div class="product-category">${getCategoryName(produto.categoria)}</div>
+                <div class="product-price">R$ ${produto.preco.toFixed(2).replace('.', ',')}</div>
+            </div>
+            <div class="product-actions">
+                <button class="btn-product-action btn-view" onclick="window.location.href='/produto/${produto.id}'">
+                    <i class="bi bi-eye"></i> Ver Detalhes
+                </button>
+                <button class="btn-product-action btn-buy" data-produto-id="${produto.id}">
+                    <i class="bi bi-cart-plus"></i> Adicionar
+                </button>
+            </div>
+        `;
+        return card;
+    }
+
+    // Obter nome da categoria
+    const getCategoryName = (categoria) => {
+        const nomes = {
+            'rosto': 'Rosto',
+            'labios': 'Lábios',
+            'olhos': 'Olhos',
+            'kits': 'Kit Completo',
+            'skincare': 'Skincare',
+            'pinceis': 'Pincéis'
+        };
+        return nomes[categoria] || categoria;
+    }
+
+    // Adicionar opções (botões de menu)
+    const appendOptions = () => {
+        const optionsDiv = document.createElement("div");
+        optionsDiv.classList.add("chat-options", "chat", "incoming");
+
+        botOptions.forEach(opt => {
+            const btn = document.createElement("button");
+            btn.classList.add("chat-btn");
+            btn.textContent = opt.text;
+            btn.onclick = () => handleOption(opt.action);
+            optionsDiv.appendChild(btn);
+        });
+        chatbox.appendChild(optionsDiv);
+        chatbox.scrollTo(0, chatbox.scrollHeight);
+    }
+
+    // Lidar com opções do menu
+    const handleOption = (action) => {
+        // Limpa opções anteriores
+        document.querySelectorAll('.chat-options').forEach(el => el.remove());
+        
+        chatbox.appendChild(createChatLi(`📌 ${getActionText(action)}`, "outgoing"));
+
+        setTimeout(() => {
+            switch(action) {
+                case "produtos":
+                    showProducts();
+                    break;
+                case "status":
+                    showStatus();
+                    break;
+                case "quiz":
+                    showQuiz();
+                    break;
+                case "whatsapp":
+                    openWhatsApp();
+                    break;
+                case "faq":
+                    showFAQ();
+                    break;
+            }
+        }, 400);
+    }
+
+    // Obter texto da ação
+    const getActionText = (action) => {
+        const texts = {
+            "produtos": "Ver Produtos",
+            "status": "Status do Pedido",
+            "quiz": "Quiz de Maquiagem",
+            "whatsapp": "Falar com Humano",
+            "faq": "Dúvidas Frequentes"
+        };
+        return texts[action] || action;
+    }
+
+    // Mostrar produtos
+    const showProducts = () => {
+        chatbox.appendChild(createChatLi("💄 Aqui estão nossos produtos em destaque:", "incoming"));
+        
+        produtos.forEach((produto, index) => {
+            setTimeout(() => {
+                const productCard = createProductCard(produto);
+                const li = document.createElement("li");
+                li.classList.add("chat", "incoming", "product-message");
+                li.appendChild(productCard);
+                chatbox.appendChild(li);
+                chatbox.scrollTo(0, chatbox.scrollHeight);
+                
+                // Adicionar evento de compra
+                li.querySelector('.btn-buy').addEventListener('click', (e) => {
+                    const produtoId = parseInt(e.currentTarget.getAttribute('data-produto-id'));
+                    handlePurchase(produtoId);
+                });
+            }, index * 200);
+        });
+
+        setTimeout(() => {
+            if (!isUserLoggedIn()) {
+                chatbox.appendChild(createChatLi(
+                    "💡 <strong>Dica:</strong> Faça <a href='/login' class='chat-link'>login</a> para adicionar produtos ao carrinho!",
+                    "incoming"
+                ));
+            }
+            chatbox.appendChild(createChatLi("Posso ajudar com algo mais?", "incoming"));
+            appendOptions();
+        }, produtos.length * 200 + 600);
+    }
+
+    // Lidar com compra
+    const handlePurchase = (produtoId) => {
+        // Verifica se está logado
+        if (!isUserLoggedIn()) {
+            chatbox.appendChild(createChatLi("Quero adicionar este produto ao carrinho", "outgoing"));
+            
+            setTimeout(() => {
+                chatbox.appendChild(createChatLi(
+                    "🔒 Ops! Você precisa fazer <a href='/login' class='chat-link'><strong>login</strong></a> para adicionar produtos ao carrinho.<br><br>" +
+                    "Ainda não tem conta? <a href='/registrar' class='chat-link'><strong>Cadastre-se aqui!</strong></a>",
+                    "incoming"
+                ));
+                chatbox.scrollTo(0, chatbox.scrollHeight);
+                setTimeout(() => appendOptions(), 2000);
+            }, 600);
+            return;
+        }
+
+        const produto = produtos.find(p => p.id === produtoId);
+        if (!produto) return;
+
+        // Desabilita o botão temporariamente
+        const btn = document.querySelector(`[data-produto-id="${produtoId}"]`);
+        if (btn) {
+            btn.disabled = true;
+            btn.innerHTML = '<i class="bi bi-hourglass-split"></i> Aguarde...';
+        }
+
+        chatbox.appendChild(createChatLi(`Adicionar ao carrinho: ${produto.nome}`, "outgoing"));
+        
+        // Faz a requisição
+        fetch(`/adicionar_carrinho/${produtoId}`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/x-www-form-urlencoded',
+            },
+            body: 'quantidade=1'
+        })
+        .then(response => {
+            if (!response.ok) throw new Error('Erro ao adicionar');
+            return response;
+        })
+        .then(() => {
+            setTimeout(() => {
+                chatbox.appendChild(createChatLi(
+                    `✅ <strong>${produto.nome}</strong> foi adicionado ao carrinho!<br><br>` +
+                    `💰 Valor: <strong>R$ ${produto.preco.toFixed(2).replace('.', ',')}</strong><br><br>` +
+                    `<a href="/carrinho" class="chat-link-button">🛒 Ver Carrinho</a> ` +
+                    `<a href="/produto/${produto.id}" class="chat-link-button">📦 Ver Detalhes</a>`,
+                    "incoming"
+                ));
+                chatbox.scrollTo(0, chatbox.scrollHeight);
+                
+                // Reabilita o botão
+                if (btn) {
+                    btn.disabled = false;
+                    btn.innerHTML = '<i class="bi bi-check2"></i> Adicionado!';
+                    setTimeout(() => {
+                        btn.innerHTML = '<i class="bi bi-cart-plus"></i> Adicionar';
+                    }, 3000);
+                }
+                
+                // Atualiza badge do carrinho (sem reload)
+                updateCartBadge();
+                
+                setTimeout(() => {
+                    chatbox.appendChild(createChatLi("Deseja continuar comprando?", "incoming"));
+                    appendOptions();
+                }, 2000);
+            }, 600);
+        })
+        .catch(err => {
+            console.error("Erro ao adicionar ao carrinho:", err);
+            chatbox.appendChild(createChatLi(
+                "❌ Desculpe, ocorreu um erro ao adicionar o produto. Tente novamente.",
+                "incoming"
+            ));
+            if (btn) {
+                btn.disabled = false;
+                btn.innerHTML = '<i class="bi bi-cart-plus"></i> Adicionar';
+            }
+            setTimeout(() => appendOptions(), 2000);
+        });
+    }
+
+    // Atualizar badge do carrinho (sem reload)
+    const updateCartBadge = () => {
+        const badge = document.querySelector('.navbar-right-cluster .badge');
+        if (badge) {
+            const currentCount = parseInt(badge.textContent) || 0;
+            badge.textContent = currentCount + 1;
+            
+            // Animação de destaque
+            badge.style.transform = 'scale(1.3)';
+            setTimeout(() => {
+                badge.style.transform = 'scale(1)';
+            }, 300);
+        }
+    }
+
+    // Mostrar status
+    const showStatus = () => {
+        chatbox.appendChild(createChatLi(
+            "Para verificar o status do seu pedido, por favor faça login e acesse <a href='/meus_pedidos' class='chat-link'>Meus Pedidos</a>.",
+            "incoming"
+        ));
+        setTimeout(() => appendOptions(), 1500);
+    }
+
+    // Mostrar quiz
+    const showQuiz = () => {
+        chatbox.appendChild(createChatLi(
+            "✨ Temos um quiz incrível para descobrir a maquilhagem ideal para você!<br><br>" +
+            "<a href='/quiz' class='chat-link'>🎯 Fazer o Quiz Agora</a>",
+            "incoming"
+        ));
+        setTimeout(() => appendOptions(), 1500);
+    }
+
+    // Abrir WhatsApp
+    const openWhatsApp = () => {
+    // Remove opções anteriores
+    document.querySelectorAll('.chat-options, .whatsapp-options').forEach(el => el.remove());
+    
+    // Mensagem de boas-vindas
+    chatbox.appendChild(createChatLi(
+        "💬 <strong>Central de Atendimento WhatsApp</strong><br><br>" +
+        "Nossa equipe está pronta para ajudar você! 😊<br>" +
+        "Escolha o departamento desejado:",
+        "incoming"
+    ));
+    
+    setTimeout(() => {
+        const whatsappOptionsDiv = document.createElement("div");
+        whatsappOptionsDiv.classList.add("whatsapp-options", "chat", "incoming");
+        
+        const whatsappOptions = [
+            { 
+                icon: "📦", 
+                text: "Dúvidas sobre Pedido", 
+                message: "Olá! Preciso de ajuda com meu pedido na Lumina Beauty. Gostaria de falar com o departamento de pedidos.",
+                department: "Pedidos"
+            },
+            { 
+                icon: "🛍️", 
+                text: "Informações de Produto", 
+                message: "Olá! Gostaria de saber mais informações sobre os produtos da Lumina Beauty. Podem me ajudar?",
+                department: "Produtos"
+            },
+            { 
+                icon: "🚚", 
+                text: "Rastreamento de Entrega", 
+                message: "Olá! Gostaria de rastrear minha entrega da Lumina Beauty. Podem me informar o status?",
+                department: "Logística"
+            },
+            { 
+                icon: "💳", 
+                text: "Formas de Pagamento", 
+                message: "Olá! Tenho dúvidas sobre formas de pagamento na Lumina Beauty. Podem me ajudar?",
+                department: "Financeiro"
+            },
+            { 
+                icon: "🔄", 
+                text: "Troca ou Devolução", 
+                message: "Olá! Preciso de ajuda com troca/devolução de um produto da Lumina Beauty.",
+                department: "Pós-Venda"
+            },
+            { 
+                icon: "💄", 
+                text: "Consultoria de Beleza", 
+                message: "Olá! Gostaria de uma consultoria de beleza personalizada da Lumina Beauty.",
+                department: "Consultoria"
+            },
+            { 
+                icon: "❓", 
+                text: "Outro Assunto", 
+                message: "Olá! Preciso falar com o atendimento da Lumina Beauty sobre outro assunto.",
+                department: "Geral"
+            }
+        ];
+        
+        whatsappOptions.forEach((opt, index) => {
+            setTimeout(() => {
+                const btn = document.createElement("button");
+                btn.classList.add("whatsapp-btn");
+                btn.innerHTML = `
+                    <span class="whatsapp-btn-icon">${opt.icon}</span>
+                    <span class="whatsapp-btn-text">
+                        <strong>${opt.text}</strong>
+                        <small>Dep. ${opt.department}</small>
+                    </span>
+                    <i class="bi bi-arrow-right-short whatsapp-btn-arrow"></i>
+                `;
+                
+                btn.onclick = () => handleWhatsAppClick(opt);
+                whatsappOptionsDiv.appendChild(btn);
+                
+                // Animação de entrada
+                btn.style.animation = 'slideInRight 0.3s ease forwards';
+                
+                chatbox.scrollTo(0, chatbox.scrollHeight);
+            }, index * 100); // Delay progressivo
+        });
+        
+        chatbox.appendChild(whatsappOptionsDiv);
+        chatbox.scrollTo(0, chatbox.scrollHeight);
+        
+        // Adiciona nota de horário de atendimento
+        setTimeout(() => {
+            chatbox.appendChild(createChatLi(
+                "⏰ <small>Horário de atendimento: Segunda a Sexta, 9h às 18h</small>",
+                "incoming"
+            ));
+            chatbox.scrollTo(0, chatbox.scrollHeight);
+        }, whatsappOptions.length * 100 + 500);
+        
+    }, 800);
+}
+
+// Função para lidar com clique nos botões do WhatsApp
+const handleWhatsAppClick = (option) => {
+    // Remove opções do WhatsApp
+    document.querySelectorAll('.whatsapp-options').forEach(el => el.remove());
+    
+    // Mostra a escolha do usuário
+    chatbox.appendChild(createChatLi(
+        `${option.icon} ${option.text}`, 
+        "outgoing"
+    ));
+    
+    // Animação de "digitando"
+    setTimeout(() => {
+        const typingDiv = document.createElement("li");
+        typingDiv.classList.add("chat", "incoming", "typing-indicator");
+        typingDiv.innerHTML = `
+            <span class="bi bi-robot"></span>
+            <div class="typing-dots">
+                <span></span>
+                <span></span>
+                <span></span>
+            </div>
+        `;
+        chatbox.appendChild(typingDiv);
+        chatbox.scrollTo(0, chatbox.scrollHeight);
+        
+        // Remove indicador e mostra confirmação
+        setTimeout(() => {
+            typingDiv.remove();
+            
+            chatbox.appendChild(createChatLi(
+                `✅ <strong>Conectando com ${option.department}...</strong><br>` +
+                `Você será redirecionado para o WhatsApp em instantes!<br><br>` +
+                `<div class="whatsapp-redirect-info">` +
+                `<i class="bi bi-whatsapp"></i> ` +
+                `Aguardando redirecionamento...` +
+                `</div>`,
+                "incoming"
+            ));
+            chatbox.scrollTo(0, chatbox.scrollHeight);
+            
+            // Contador regressivo visual
+            let countdown = 3;
+            const countdownInterval = setInterval(() => {
+                const redirectInfo = document.querySelector('.whatsapp-redirect-info');
+                if (redirectInfo && countdown > 0) {
+                    redirectInfo.innerHTML = `
+                        <i class="bi bi-hourglass-split"></i> 
+                        Redirecionando em ${countdown}...
+                    `;
+                    countdown--;
+                } else {
+                    clearInterval(countdownInterval);
+                }
+            }, 1000);
+            
+            // Abre o WhatsApp
+            setTimeout(() => {
+                const phoneNumber = "5547999998888"; // SUBSTITUA PELO SEU NÚMERO
+                const encodedMessage = encodeURIComponent(option.message);
+                window.open(`https://wa.me/${phoneNumber}?text=${encodedMessage}`, "_blank");
+                
+                // Feedback após abertura
+                setTimeout(() => {
+                    chatbox.appendChild(createChatLi(
+                        "🎉 WhatsApp aberto com sucesso!<br><br>" +
+                        "Se o WhatsApp não abriu automaticamente, " +
+                        "<a href='https://wa.me/" + phoneNumber + "?text=" + encodedMessage + "' target='_blank' class='chat-link'>" +
+                        "clique aqui</a>.",
+                        "incoming"
+                    ));
+                    
+                    setTimeout(() => {
+                        chatbox.appendChild(createChatLi(
+                            "Posso ajudar com algo mais?", 
+                            "incoming"
+                        ));
+                        appendOptions();
+                    }, 2000);
+                }, 1000);
+            }, 3000);
+            
+        }, 1500);
+    }, 600);
+}
+
+    // Mostrar FAQ
+    const showFAQ = () => {
+        chatbox.appendChild(createChatLi(
+            "❓ <strong>Perguntas Frequentes:</strong><br><br>" +
+            "• <strong>Frete:</strong> Grátis acima de R$ 250<br>" +
+            "• <strong>Entrega:</strong> 5-10 dias úteis<br>" +
+            "• <strong>Pagamento:</strong> Cartão de Crédito e PIX<br>" +
+            "• <strong>Troca:</strong> Até 30 dias<br><br>" +
+            "<a href='/contato' class='chat-link'>📧 Mais Dúvidas? Entre em Contato</a>",
+            "incoming"
+        ));
+        setTimeout(() => appendOptions(), 2000);
+    }
+
+    // Processar mensagem do usuário
+    const processUserMessage = (message) => {
+        const msgLower = message.toLowerCase();
+        
+        // Busca por palavras-chave
+        if (msgLower.includes("produto") || msgLower.includes("comprar") || msgLower.includes("preço")) {
+            showProducts();
+        } else if (msgLower.includes("pedido") || msgLower.includes("status") || msgLower.includes("entrega")) {
+            showStatus();
+        } else if (msgLower.includes("quiz") || msgLower.includes("teste") || msgLower.includes("recomend")) {
+            showQuiz();
+        } else if (msgLower.includes("humano") || msgLower.includes("atendente") || msgLower.includes("whatsapp")) {
+            openWhatsApp();
+        } else if (msgLower.includes("frete") || msgLower.includes("pagamento") || msgLower.includes("troca")) {
+            showFAQ();
+        } else {
+            // Resposta padrão
+            chatbox.appendChild(createChatLi(
+                "Desculpe, não entendi sua pergunta. 😅<br>Escolha uma das opções abaixo ou reformule sua pergunta:",
+                "incoming"
+            ));
+            setTimeout(() => appendOptions(), 800);
+        }
+    }
+
+    // Toggle do Chat
+    chatbotToggler.addEventListener("click", () => {
+        document.body.classList.toggle("show-chatbot");
+        if (document.body.classList.contains("show-chatbot")) {
+            if (chatbox.querySelectorAll('.chat-options').length === 0) {
+                setTimeout(appendOptions, 600);
+            }
+            // Foca no input quando abre
+            setTimeout(() => chatInput.focus(), 700);
+        }
+    });
+
+    // Envio de mensagem
+    const handleChat = () => {
+        const userMessage = chatInput.value.trim();
+        if (!userMessage) return;
+        
+        chatInput.value = "";
+        chatInput.style.height = "45px"; // Reseta altura
+        
+        // Remove opções anteriores
+        document.querySelectorAll('.chat-options').forEach(el => el.remove());
+        
+        chatbox.appendChild(createChatLi(userMessage, "outgoing"));
+        chatbox.scrollTo(0, chatbox.scrollHeight);
+
+        setTimeout(() => {
+            processUserMessage(userMessage);
+            chatbox.scrollTo(0, chatbox.scrollHeight);
+        }, 600);
+    }
+
+    sendChatBtn.addEventListener("click", handleChat);
+    
+    chatInput.addEventListener("keydown", (e) => {
+        if(e.key === "Enter" && !e.shiftKey) {
+            e.preventDefault();
+            handleChat();
+        }
+    });
+
+    // Auto-resize do textarea
+    chatInput.addEventListener("input", () => {
+        chatInput.style.height = "45px";
+        chatInput.style.height = chatInput.scrollHeight + "px";
+    });
+
+    console.log("✅ Chatbot Lumina carregado com sucesso!");
+});
+
+document.addEventListener('DOMContentLoaded', function() {
+    
+    // ==========================================
+    // 1. ALERTAS FLUTUANTES (ADAPTADO)
+    // ==========================================
+    // O CSS e HTML já cuidam da parte visual.
+    // O JS abaixo é apenas para quando usamos AJAX (mostrarAlerta).
+
+    
+
+    // ==========================================
+    // 3. MASCARAS DE INPUT (REUTILIZÁVEL)
+    // ==========================================
+    
+    // Máscara de CEP
+    const cepInputs = document.querySelectorAll('input[placeholder*="CEP"], input[placeholder*="00000"], input[id*="cep"]');
+    cepInputs.forEach(input => {
+        input.addEventListener('input', function(e) {
+            let v = e.target.value.replace(/\D/g, '');
+            v = v.replace(/^(\d{5})(\d)/, '$1-$2');
+            e.target.value = v.slice(0, 9);
+        });
+    });
+
+    // Máscara de Telefone
+    const phoneInputs = document.querySelectorAll('input[type="tel"]');
+    phoneInputs.forEach(input => {
+        input.addEventListener('input', function(e) {
+            let v = e.target.value.replace(/\D/g, '');
+            v = v.replace(/^(\d{2})(\d)/, '($1) $2');
+            v = v.replace(/(\d{5})(\d)/, '$1-$2');
+            e.target.value = v.slice(0, 15);
+        });
+    });
+
+    // ==========================================
+    // 4. BLOQUEAR EXCLUSÃO DE CONTA PARA ADMIN
+    // ==========================================
+    
+    const deleteAccountForm = document.querySelector('form[action*="excluir_conta"]');
+    if (deleteAccountForm) {
+        deleteAccountForm.addEventListener('submit', function(e) {
+            // O bloqueia acontece no backend, mas podemos avisar no frontend
+            const userRole = document.body.getAttribute('data-user-role') || 'cliente';
+            if (userRole === 'admin') {
+                alert('Administradores não podem remover suas contas.');
+                e.preventDefault();
+            }
+        });
+    }
+
+    // ==========================================
+    // 5. HOVER DO BOTÃO PAGAMENTO
+    // ==========================================
+    
+    const checkoutButtons = document.querySelectorAll('.btn-checkout, .pagamento-btn');
+    checkoutButtons.forEach(btn => {
+        if (btn.classList.contains('disabled') || btn.hasAttribute('disabled')) {
+            btn.style.cursor = 'not-allowed';
+            btn.style.opacity = '0.6';
+        }
+    });
+
+});
+
+// ==========================================
+// 6. CARREGAR ALERTAS - FUNÇÃO AUXILIAR FLUTUANTE
+// ==========================================
+
+function mostrarAlerta(mensagem, tipo = 'info') {
+    // Agora buscamos o container flutuante
+    const targetContainer = document.getElementById('flash-overlay-container');
+    
+    // Fallback se não existir o container flutuante (o que não deve acontecer)
+    if (!targetContainer) {
+        const fallbackContainer = document.querySelector('.container');
+        if (fallbackContainer) {
+             const alertDiv = document.createElement('div');
+             alertDiv.className = `alert alert-${tipo} alert-dismissible fade show`;
+             alertDiv.innerHTML = `${mensagem}<button type="button" class="btn-close" data-bs-dismiss="alert"></button>`;
+             fallbackContainer.insertBefore(alertDiv, fallbackContainer.firstChild);
+        }
+        return;
+    }
+}
+
+
+document.addEventListener('DOMContentLoaded', function() {
+    const container = document.getElementById('flash-overlay-container');
+    const alerts = container.querySelectorAll('.alert-floating');
+    
+    alerts.forEach(alertDiv => {
+        // Adicionar barra de progresso
+        const progressBar = document.createElement('div');
+        progressBar.className = 'alert-progress-bar';
+        alertDiv.appendChild(progressBar);
+        
+        // Botão de fechar
+        const btnClose = alertDiv.querySelector('.btn-close');
+        if (btnClose) {
+            btnClose.addEventListener('click', function() {
+                fecharAlerta(alertDiv);
+            });
+        }
+        
+        // Auto-fechar após 5 segundos
+        setTimeout(() => {
+            if (alertDiv.parentElement) {
+                fecharAlerta(alertDiv);
+            }
+        }, 5000);
+    });
+    
+    function fecharAlerta(alertDiv) {
+        alertDiv.classList.add('closing');
+        setTimeout(() => {
+            alertDiv.remove();
+        }, 500);
+    }
+});
+
+    
+
+    </script>
+    
+    {% block scripts %}{% endblock %}
+
+</body>
+</html>

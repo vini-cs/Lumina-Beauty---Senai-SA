@@ -1,0 +1,868 @@
+{% extends 'base.html' %}
+
+{% block title %}Avaliações - Lumina Beauty{% endblock %}
+
+{% block content %}
+<style>
+
+    /* --- Estilos Específicos da Página de Avaliações --- */
+    :root {
+        --primary-color: #e8b8c2;
+        --secondary-color: #f9f0f2;
+        --text-color: #6b4950;
+        --dark-accent: #8c5b65;
+        --gold-color: #c9a87c;
+        --soft-nude: #e0d0d4;
+    }
+
+    /* Hero Section */
+    .reviews-hero {
+        background: linear-gradient(135deg, var(--primary-color) 0%, var(--soft-nude) 100%);
+        padding: 4rem 0 3rem;
+        text-align: center; 
+        margin-bottom: 3rem;
+    }
+
+    @media (max-width: 991px) {
+        .reviews-hero { margin-top: 70px; }
+    }
+
+    .reviews-hero h1 {
+        font-size: 3rem;
+        font-weight: 700;
+        color: var(--dark-accent);
+        margin-bottom: 1rem;
+    }
+
+    .reviews-hero p {
+        font-size: 1.2rem;
+        color: var(--text-color);
+        opacity: 0.9;
+    }
+
+    /* Estatísticas */
+    .stats-section {
+        background: white;
+        border-radius: 20px;
+        padding: 2rem;
+        box-shadow: 0 5px 20px rgba(0, 0, 0, 0.08);
+        margin-bottom: 3rem;
+        transition: transform 0.3s ease;
+    }
+    .stats-section:hover { transform: translateY(-3px); }
+
+    .stat-item { text-align: center; padding: 1rem; }
+    
+    .stat-number { font-size: 2.5rem; font-weight: 700; color: var(--gold-color); display: block; transition: all 0.3s ease; }
+    .stat-label { font-size: 1rem; color: var(--text-color); font-weight: 600; }
+    
+    /* Classe para animação de flash quando atualiza */
+    .stat-updated { color: #e58e00 !important; transform: scale(1.2); }
+
+    .average-rating {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0.5rem;
+        margin-top: 1rem;
+    }
+    .rating-stars { color: var(--gold-color); font-size: 1.5rem; letter-spacing: 2px; }
+
+    /* Filtros */
+    .filters-section {
+        background: white;
+        border-radius: 15px;
+        padding: 1.5rem;
+        margin-bottom: 2rem;
+        box-shadow: 0 3px 15px rgba(0, 0, 0, 0.07);
+    }
+
+    .filter-btn {
+        padding: 0.5rem 1.2rem;
+        border-radius: 20px;
+        border: 2px solid var(--soft-nude);
+        background: white;
+        color: var(--text-color);
+        font-weight: 600;
+        cursor: pointer;
+        margin: 0.3rem;
+        transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+    }
+
+    .filter-btn:hover {
+        transform: translateY(-2px);
+        border-color: var(--primary-color);
+        box-shadow: 0 4px 10px rgba(232, 184, 194, 0.3);
+    }
+
+    .filter-btn.active {
+        background: var(--primary-color);
+        border-color: var(--primary-color);
+        color: var(--dark-accent);
+        transform: scale(1.05);
+        box-shadow: 0 4px 12px rgba(232, 184, 194, 0.5);
+    }
+
+    /* Mensagem de "Sem Avaliações" */
+    .no-reviews-message {
+        display: none;
+        text-align: center;
+        padding: 3rem;
+        background: white;
+        border-radius: 15px;
+        color: var(--text-color);
+        font-size: 1.1rem;
+        border: 1px dashed var(--soft-nude);
+        animation: fadeIn 0.5s ease;
+    }
+
+    /* Card de Avaliação */
+    .review-card {
+        background: white;
+        border-radius: 15px;
+        padding: 2rem;
+        margin-bottom: 2rem;
+        box-shadow: 0 3px 15px rgba(0, 0, 0, 0.07);
+        border-left: 4px solid var(--primary-color);
+        transition: all 0.4s cubic-bezier(0.25, 0.8, 0.25, 1);
+    }
+
+    .review-card.hidden { display: none; }
+    
+    .review-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 12px 30px rgba(107, 73, 80, 0.12);
+    }
+
+    .review-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-bottom: 1rem;
+    }
+
+    .reviewer-info { display: flex; align-items: center; gap: 1rem; }
+    
+    .reviewer-avatar {
+        width: 50px; height: 50px;
+        border-radius: 50%;
+        background: linear-gradient(135deg, var(--primary-color), var(--gold-color));
+        display: flex; align-items: center; justify-content: center;
+        font-size: 1.5rem; font-weight: 700; color: white;
+        box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+    }
+
+    .reviewer-details h5 { margin: 0; font-size: 1.1rem; font-weight: 700; color: var(--dark-accent); }
+    .reviewer-details .review-date { font-size: 0.85rem; color: #888; }
+    .review-rating { color: var(--gold-color); font-size: 1.2rem; }
+
+    .review-product {
+        background: var(--secondary-color);
+        padding: 0.5rem 1rem;
+        border-radius: 10px;
+        margin-bottom: 1rem;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        font-size: 0.9rem;
+        font-weight: 600;
+        color: var(--text-color);
+    }
+
+    .review-text { font-size: 1rem; line-height: 1.6; color: var(--text-color); margin-bottom: 1rem; }
+    
+    .review-images { display: flex; gap: 0.5rem; margin-bottom: 1rem; flex-wrap: wrap; }
+    
+    .review-image {
+        width: 80px; height: 80px;
+        border-radius: 10px; object-fit: cover;
+        cursor: pointer; 
+        transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        border: 2px solid var(--soft-nude);
+    }
+    .review-image:hover { transform: scale(1.15) rotate(2deg); z-index: 2; }
+
+    .review-footer {
+        display: flex; align-items: center; gap: 1.5rem;
+        padding-top: 1rem; border-top: 1px solid var(--soft-nude);
+    }
+
+    .review-action {
+        display: flex; align-items: center; gap: 0.3rem;
+        color: #888; font-size: 0.9rem; cursor: pointer;
+        background: none; border: none; padding: 0.3rem 0.5rem;
+        border-radius: 5px;
+        transition: all 0.2s ease;
+    }
+    .review-action:hover { color: var(--primary-color); background: var(--secondary-color); }
+    .review-action.active { color: var(--primary-color); font-weight: 600; }
+
+    /* Comentários */
+    .comments-section {
+        margin-top: 1rem;
+        display: none;
+        background-color: #fcfcfc;
+        padding: 1rem;
+        border-radius: 10px;
+        border: 1px solid #eee;
+    }
+
+    .comments-section.open { display: block; animation: fadeIn 0.3s ease; }
+
+    .comment-input-wrapper { display: flex; gap: 10px; margin-bottom: 1rem; margin-top: 1rem; }
+    
+    .comment-input {
+        width: 100%; padding: 0.5rem 1rem;
+        border: 1px solid var(--soft-nude); border-radius: 20px; outline: none;
+        transition: border-color 0.3s;
+    }
+    .comment-input:focus { border-color: var(--primary-color); }
+
+    .btn-post-comment {
+        background-color: var(--primary-color); color: white;
+        border: none; padding: 0.3rem 1rem; border-radius: 20px; cursor: pointer;
+        transition: background 0.3s;
+    }
+    .btn-post-comment:hover { background-color: var(--dark-accent); }
+
+    .posted-comment {
+        display: flex; gap: 10px; margin-bottom: 10px;
+        padding-bottom: 10px; border-bottom: 1px solid #eee;
+        position: relative; animation: slideIn 0.3s ease;
+    }
+    
+    .posted-comment:last-child { border-bottom: none; }
+
+    .comment-avatar-small {
+        width: 30px; height: 30px; border-radius: 50%;
+        background: #ccc; display: flex; align-items: center; justify-content: center;
+        font-size: 0.8rem; color: white; font-weight: bold; flex-shrink: 0;
+    }
+
+    .btn-delete-comment {
+        position: absolute; right: 0; top: 0;
+        background: none; border: none; color: #ff6b6b;
+        cursor: pointer; opacity: 0.6; font-size: 0.9rem;
+        transition: opacity 0.2s;
+    }
+    .btn-delete-comment:hover { opacity: 1; transform: scale(1.1); }
+
+    /* Badge Verificado */
+    .verified-badge {
+        background: #10b981; color: white; padding: 0.2rem 0.6rem;
+        border-radius: 20px; font-size: 0.75rem; font-weight: 600;
+        display: inline-flex; align-items: center; gap: 0.3rem;
+    }
+
+    /* Loader */
+    .loading-overlay { display: none; text-align: center; padding: 2rem; }
+    .loading-dots { display: inline-block; position: relative; width: 80px; height: 80px; }
+    .loading-dots div { animation: loading-dots 1.2s cubic-bezier(0.5, 0, 0.5, 1) infinite; transform-origin: 40px 40px; }
+    .loading-dots div:after { content: " "; display: block; position: absolute; width: 7px; height: 7px; border-radius: 50%; background: var(--dark-accent); margin: -4px 0 0 -4px; }
+    .loading-dots div:nth-child(1) { animation-delay: -0.036s; } .loading-dots div:nth-child(1):after { top: 63px; left: 63px; }
+    .loading-dots div:nth-child(2) { animation-delay: -0.072s; } .loading-dots div:nth-child(2):after { top: 68px; left: 56px; }
+    .loading-dots div:nth-child(3) { animation-delay: -0.108s; } .loading-dots div:nth-child(3):after { top: 71px; left: 48px; }
+    .loading-dots div:nth-child(4) { animation-delay: -0.144s; } .loading-dots div:nth-child(4):after { top: 72px; left: 40px; }
+    .loading-dots div:nth-child(5) { animation-delay: -0.18s; } .loading-dots div:nth-child(5):after { top: 71px; left: 32px; }
+    .loading-dots div:nth-child(6) { animation-delay: -0.216s; } .loading-dots div:nth-child(6):after { top: 68px; left: 24px; }
+    .loading-dots div:nth-child(7) { animation-delay: -0.252s; } .loading-dots div:nth-child(7):after { top: 63px; left: 17px; }
+    .loading-dots div:nth-child(8) { animation-delay: -0.288s; } .loading-dots div:nth-child(8):after { top: 56px; left: 12px; }
+    @keyframes loading-dots { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+
+    /* Botão Carregar Mais - Transição */
+    #btn-load-more {
+        transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+    }
+    #btn-load-more:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 5px 15px rgba(232, 184, 194, 0.4);
+    }
+
+    /* Share Modal (Estilo YouTube) */
+    .share-modal-overlay {
+        position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+        background: rgba(0,0,0,0.6); z-index: 10000;
+        display: none; align-items: center; justify-content: center;
+        backdrop-filter: blur(5px);
+    }
+    .share-modal-content {
+        background-color: #282828; color: white;
+        width: 100%; max-width: 500px;
+        border-radius: 12px; padding: 0;
+        box-shadow: 0 10px 25px rgba(0,0,0,0.5);
+        font-family: "Quicksand", sans-serif;
+    }
+    .share-header { display: flex; justify-content: space-between; align-items: center; padding: 1rem 1.5rem; border-bottom: 1px solid #3e3e3e; }
+    .share-header h3 { font-size: 1.1rem; margin: 0; font-weight: 600; }
+    .close-share { background: none; border: none; color: #aaa; font-size: 1.5rem; cursor: pointer; transition: color 0.2s; }
+    .close-share:hover { color: white; }
+    
+    .share-body { padding: 1.5rem; }
+    .share-icons { display: flex; gap: 1.5rem; justify-content: center; margin-bottom: 2rem; }
+    
+    .share-icon-item { 
+        display: flex; flex-direction: column; align-items: center; gap: 0.5rem; 
+        cursor: pointer; text-decoration: none; color: white; 
+    }
+    .share-icon-item:hover { color: white; }
+    
+    .icon-circle { 
+        width: 50px; height: 50px; border-radius: 50%; 
+        display: flex; align-items: center; justify-content: center; 
+        font-size: 1.5rem; color: white; 
+        transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275); 
+    }
+    .icon-circle:hover { transform: scale(1.2); }
+    
+    .icon-whatsapp { background-color: #25D366; } 
+    .icon-x { background-color: #000; border: 1px solid #333; } 
+    .icon-facebook { background-color: #1877F2; } 
+    .icon-email { background-color: #777; }
+    .share-label { font-size: 0.8rem; color: #aaa; }
+    
+    .copy-link-box { background-color: #121212; border: 1px solid #3e3e3e; border-radius: 8px; padding: 0.5rem; display: flex; align-items: center; justify-content: space-between; }
+    .link-text { color: #3ea6ff; font-size: 0.9rem; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; padding: 0 10px; width: 80%; }
+    
+    .btn-copy {
+        background-color: #3ea6ff;
+        color: #0f0f0f;
+        border: none;
+        padding: 0.5rem 1.2rem;
+        border-radius: 18px;
+        font-weight: 600;
+        font-size: 0.9rem;
+        cursor: pointer;
+        transition: background-color 0.2s, transform 0.2s;
+    }
+    .btn-copy:hover { background-color: #65b8ff; transform: scale(1.05); }
+
+    .btn-copy-success {
+        background-color: #10b981 !important;
+        color: white !important;
+    }
+    .btn-copy-success:hover {
+        background-color: #0d9668 !important;
+    }
+
+    /* Animações Gerais */
+    @keyframes fadeInUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+    @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+    @keyframes slideIn { from { opacity: 0; transform: translateX(-10px); } to { opacity: 1; transform: translateX(0); } }
+    .review-card { animation: fadeInUp 0.5s ease; }
+</style>
+
+<div class="reviews-hero">
+    <div class="container">
+        <h1><i class="bi bi-star-fill"></i> Avaliações dos Clientes</h1>
+        <p>Veja o que nossas clientes dizem sobre nossos produtos</p>
+    </div>
+</div>
+
+<div class="container">
+    
+    <div class="stats-section">
+        <div class="row">
+            <div class="col-md-3 col-6">
+                <div class="stat-item">
+                    <span class="stat-number" id="avg-rating-num">4,8</span>
+                    <span class="stat-label">Nota Média</span>
+                    <div class="average-rating">
+                        <span class="rating-stars" id="avg-rating-stars">★★★★★</span>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3 col-6">
+                <div class="stat-item">
+                    <span class="stat-number" id="total-reviews-num">5</span>
+                    <span class="stat-label">Avaliações</span>
+                </div>
+            </div>
+            <div class="col-md-3 col-6">
+                <div class="stat-item">
+                    <span class="stat-number">98%</span>
+                    <span class="stat-label">Recomendariam</span>
+                </div>
+            </div>
+            <div class="col-md-3 col-6">
+                <div class="stat-item">
+                    <span class="stat-number">5,423</span>
+                    <span class="stat-label">Clientes Felizes</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="filters-section">
+        <div class="d-flex flex-wrap align-items-center justify-content-between">
+            <div>
+                <span style="font-weight: 700; margin-right: 1rem;">Filtrar por:</span>
+                <button class="filter-btn active" data-filter="all">Todas</button>
+                <button class="filter-btn" data-filter="5">5 Estrelas</button>
+                <button class="filter-btn" data-filter="4">4 Estrelas</button>
+                <button class="filter-btn" data-filter="3">3 Estrelas</button>
+                <button class="filter-btn" data-filter="photos">Com Fotos</button>
+                <button class="filter-btn" data-filter="verified">Verificadas</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="row" id="reviews-container">
+        <div class="col-12">
+            
+            <div id="no-reviews-msg" class="no-reviews-message">
+                <i class="bi bi-inbox fs-2 d-block mb-2 text-muted"></i>
+                Ainda não há avaliações para essa opção.
+            </div>
+
+            <div class="review-card" data-rating="5" data-has-photos="true" data-verified="true">
+                <div class="review-header">
+                    <div class="reviewer-info">
+                        <div class="reviewer-avatar">M</div>
+                        <div class="reviewer-details">
+                            <h5>Maria Silva <span class="verified-badge"><i class="bi bi-check-circle-fill"></i> Verificada</span></h5>
+                            <span class="review-date">Há 2 dias</span>
+                        </div>
+                    </div>
+                    <div class="review-rating">★★★★★</div>
+                </div>
+                <div class="review-product"><i class="bi bi-box-seam"></i> Pó Compacto Translúcido</div>
+                <p class="review-text">Estou simplesmente apaixonada por este pó compacto! A cobertura é perfeita.</p>
+                <div class="review-images">
+                    <img src="https://images.unsplash.com/photo-1596462502278-27bfdc403348?w=200" alt="Foto 1" class="review-image">
+                    <img src="https://images.unsplash.com/photo-1512496015851-a90fb38ba796?w=200" alt="Foto 2" class="review-image">
+                </div>
+                <div class="review-footer">
+                    <button class="review-action btn-like"><i class="bi bi-hand-thumbs-up"></i> Útil (234)</button>
+                    <button class="review-action btn-comment"><i class="bi bi-chat-dots"></i> Comentar</button>
+                    <button class="review-action btn-share"><i class="bi bi-share"></i> Compartilhar</button>
+                </div>
+                <div class="comments-section">
+                    <div class="posted-comments-list"></div>
+                    <div class="comment-input-wrapper">
+                        <input type="text" class="comment-input" placeholder="Adicione um comentário...">
+                        <button class="btn-post-comment">Enviar</button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="review-card" data-rating="5" data-has-photos="false" data-verified="true">
+                <div class="review-header">
+                    <div class="reviewer-info">
+                        <div class="reviewer-avatar">J</div>
+                        <div class="reviewer-details">
+                            <h5>Juliana Costa <span class="verified-badge"><i class="bi bi-check-circle-fill"></i> Verificada</span></h5>
+                            <span class="review-date">Há 5 dias</span>
+                        </div>
+                    </div>
+                    <div class="review-rating">★★★★★</div>
+                </div>
+                <div class="review-product"><i class="bi bi-box-seam"></i> Batom Líquido Cremoso</div>
+                <p class="review-text">Que batom maravilhoso! A textura é super cremosa.</p>
+                <div class="review-footer">
+                    <button class="review-action active btn-like"><i class="bi bi-hand-thumbs-up-fill"></i> Útil (189)</button>
+                    <button class="review-action btn-comment"><i class="bi bi-chat-dots"></i> Comentar</button>
+                    <button class="review-action btn-share"><i class="bi bi-share"></i> Compartilhar</button>
+                </div>
+                <div class="comments-section">
+                    <div class="posted-comments-list"></div>
+                    <div class="comment-input-wrapper">
+                        <input type="text" class="comment-input" placeholder="Adicione um comentário...">
+                        <button class="btn-post-comment">Enviar</button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="review-card" data-rating="5" data-has-photos="true" data-verified="true">
+                <div class="review-header">
+                    <div class="reviewer-info">
+                        <div class="reviewer-avatar">C</div>
+                        <div class="reviewer-details">
+                            <h5>Camila Rodrigues <span class="verified-badge"><i class="bi bi-check-circle-fill"></i> Verificada</span></h5>
+                            <span class="review-date">Há 1 semana</span>
+                        </div>
+                    </div>
+                    <div class="review-rating">★★★★★</div>
+                </div>
+                <div class="review-product"><i class="bi bi-box-seam"></i> Kit Completo Lumina</div>
+                <p class="review-text">Melhor compra que fiz! O kit vem com tudo que preciso.</p>
+                <div class="review-images">
+                    <img src="https://images.unsplash.com/photo-1522335789203-aabd1fc54bc9?w=200" alt="Foto 1" class="review-image">
+                    <img src="https://images.unsplash.com/photo-1487412947147-5cebf100ffc2?w=200" alt="Foto 2" class="review-image">
+                    <img src="https://images.unsplash.com/photo-1631214524020-7e18db9a8f92?w=200" alt="Foto 3" class="review-image">
+                </div>
+                <div class="review-footer">
+                    <button class="review-action btn-like"><i class="bi bi-hand-thumbs-up"></i> Útil (312)</button>
+                    <button class="review-action btn-comment"><i class="bi bi-chat-dots"></i> Comentar</button>
+                    <button class="review-action btn-share"><i class="bi bi-share"></i> Compartilhar</button>
+                </div>
+                <div class="comments-section">
+                    <div class="posted-comments-list"></div>
+                    <div class="comment-input-wrapper">
+                        <input type="text" class="comment-input" placeholder="Adicione um comentário...">
+                        <button class="btn-post-comment">Enviar</button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="review-card" data-rating="4" data-has-photos="false" data-verified="false">
+                <div class="review-header">
+                    <div class="reviewer-info">
+                        <div class="reviewer-avatar">F</div>
+                        <div class="reviewer-details">
+                            <h5>Fernanda Lima</h5>
+                            <span class="review-date">Há 2 semanas</span>
+                        </div>
+                    </div>
+                    <div class="review-rating">★★★★☆</div>
+                </div>
+                <div class="review-product"><i class="bi bi-box-seam"></i> Sérum Hidratante</div>
+                <p class="review-text">O sérum é ótimo, deixa a pele bem macia e hidratada.</p>
+                <div class="review-footer">
+                    <button class="review-action btn-like"><i class="bi bi-hand-thumbs-up"></i> Útil (87)</button>
+                    <button class="review-action btn-comment"><i class="bi bi-chat-dots"></i> Comentar</button>
+                    <button class="review-action btn-share"><i class="bi bi-share"></i> Compartilhar</button>
+                </div>
+                <div class="comments-section">
+                    <div class="posted-comments-list"></div>
+                    <div class="comment-input-wrapper">
+                        <input type="text" class="comment-input" placeholder="Adicione um comentário...">
+                        <button class="btn-post-comment">Enviar</button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="review-card" data-rating="5" data-has-photos="true" data-verified="true">
+                <div class="review-header">
+                    <div class="reviewer-info">
+                        <div class="reviewer-avatar">A</div>
+                        <div class="reviewer-details">
+                            <h5>Amanda Santos <span class="verified-badge"><i class="bi bi-check-circle-fill"></i> Verificada</span></h5>
+                            <span class="review-date">Há 3 semanas</span>
+                        </div>
+                    </div>
+                    <div class="review-rating">★★★★★</div>
+                </div>
+                <div class="review-product"><i class="bi bi-box-seam"></i> Kit de Pincéis Profissional</div>
+                <p class="review-text">Pincéis de altíssima qualidade! São super macios.</p>
+                <div class="review-images">
+                    <img src="https://http2.mlstatic.com/D_NQ_NP_2X_991432-MLA83757322382_042025-F.webp" alt="Foto 1" class="review-image">
+                </div>
+                <div class="review-footer">
+                    <button class="review-action btn-like"><i class="bi bi-hand-thumbs-up"></i> Útil (156)</button>
+                    <button class="review-action btn-comment"><i class="bi bi-chat-dots"></i> Comentar</button>
+                    <button class="review-action btn-share"><i class="bi bi-share"></i> Compartilhar</button>
+                </div>
+                <div class="comments-section">
+                    <div class="posted-comments-list"></div>
+                    <div class="comment-input-wrapper">
+                        <input type="text" class="comment-input" placeholder="Adicione um comentário...">
+                        <button class="btn-post-comment">Enviar</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="text-center my-4" id="load-more-container">
+        <div class="loading-overlay" id="loading-spinner">
+            <div class="loading-dots">
+                <div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div>
+            </div>
+        </div>
+        
+        <button id="btn-load-more" class="btn btn-primary btn-lg" style="padding: 1rem 3rem; border-radius: 50px; background-color: var(--primary-color); border: none;">
+            <i class="bi bi-arrow-down-circle"></i> Carregar Mais Avaliações
+        </button>
+    </div>
+
+</div>
+
+<div class="share-modal-overlay" id="share-modal">
+    <div class="share-modal-content">
+        <div class="share-header">
+            <h3>Compartilhar em uma postagem</h3>
+            <button class="close-share" id="close-share-modal">&times;</button>
+        </div>
+        <div class="share-body">
+            <div class="share-icons">
+                <a href="#" target="_blank" class="share-icon-item" id="share-whatsapp"><div class="icon-circle icon-whatsapp"><i class="bi bi-whatsapp"></i></div><span class="share-label">WhatsApp</span></a>
+                <a href="#" target="_blank" class="share-icon-item" id="share-x"><div class="icon-circle icon-x"><i class="bi bi-twitter-x"></i></div><span class="share-label">X</span></a>
+                <a href="#" target="_blank" class="share-icon-item" id="share-facebook"><div class="icon-circle icon-facebook"><i class="bi bi-facebook"></i></div><span class="share-label">Facebook</span></a>
+                <a href="#" class="share-icon-item" id="share-email"><div class="icon-circle icon-email"><i class="bi bi-envelope"></i></div><span class="share-label">E-mail</span></a>
+            </div>
+            <div class="copy-link-box">
+                <div class="link-text" id="share-link-text">https://lumina.beauty/reviews/post/85Rqa0B9Q</div>
+                <button class="btn-copy" id="btn-copy-link">Copiar</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        
+        // --- CORREÇÃO DE LINKS DA NAVBAR ---
+        const navbarLinks = document.querySelectorAll('.nav-link, .dropdown-item, .navbar-brand-centered');
+        navbarLinks.forEach(link => {
+            const href = link.getAttribute('href');
+            const linkMap = { 'Home': 'index.html', 'Produtos': 'produtos.html', 'Avaliações': 'avaliacoes.html', 'Sobre Nós': 'sobre.html', 'Contato': 'contato.html', 'Novidades': 'novidades.html', 'Promoções': 'promocoes.html', 'Minha Conta': 'minha_conta.html', 'Sair (Logout)': 'login.html' };
+            if (!href || href === '#' || href === '') {
+                const text = link.innerText.trim();
+                if (linkMap[text]) { link.setAttribute('href', linkMap[text]); } 
+                else if (link.classList.contains('navbar-brand-centered')) { link.setAttribute('href', 'index.html'); } 
+                else if (link.getAttribute('title') === 'Meu Carrinho') { link.setAttribute('href', 'carrinho.html'); }
+            }
+        });
+
+        // --- Dados para Randomização ---
+        const randomNames = ["Beatriz Lima", "Carla Souza", "Daniela Oliveira", "Elisa Martins", "Fernanda Rocha", "Gabriela Dias", "Helena Costa"];
+        const randomProducts = ["Sérum Vitamina C", "Base Matte HD", "Máscara de Cílios Volume", "Paleta de Sombras Nude", "Gloss Labial Hidratante"];
+        const randomReviews = [
+            "Produto excelente! Chegou antes do prazo e a qualidade é surpreendente.",
+            "Gostei bastante, mas a cor ficou um pouco diferente da foto. Mesmo assim, recomendo.",
+            "Simplesmente perfeito! Minha pele mudou completamente depois que comecei a usar.",
+            "Custo benefício incrível. Com certeza comprarei novamente.",
+            "A embalagem é linda e o produto rende muito. Estou apaixonada!",
+            "Melhor investimento que fiz para minha rotina de skincare."
+        ];
+
+        function getRandomElement(arr) { return arr[Math.floor(Math.random() * arr.length)]; }
+
+        // --- Função Central de Atualização de Estatísticas ---
+        function updateStatistics() {
+            // Seleciona APENAS os cards que estão no container, incluindo o novo
+            const cards = document.querySelectorAll('.review-card');
+            let totalStars = 0;
+            let count = 0;
+
+            cards.forEach(card => {
+                const rating = parseFloat(card.getAttribute('data-rating'));
+                if (!isNaN(rating)) {
+                    totalStars += rating;
+                    count++;
+                }
+            });
+
+            if (count === 0) return;
+
+            // Calcula Média Real
+            const average = totalStars / count;
+
+            // Seleciona Elementos do DOM
+            const avgEl = document.getElementById('avg-rating-num');
+            const totalEl = document.getElementById('total-reviews-num');
+            const starsEl = document.getElementById('avg-rating-stars');
+
+            // Efeito Visual de Atualização
+            avgEl.classList.add('stat-updated');
+            totalEl.classList.add('stat-updated');
+            setTimeout(() => {
+                avgEl.classList.remove('stat-updated');
+                totalEl.classList.remove('stat-updated');
+            }, 500);
+
+            // Atualiza Texto
+            avgEl.innerText = average.toFixed(1).replace('.', ',');
+            totalEl.innerText = count;
+
+            // Atualiza Estrelas Visuais
+            let starsHTML = "";
+            for(let i=1; i<=5; i++) {
+                if(average >= i) {
+                    starsHTML += "★"; 
+                } else if (average >= i - 0.5) {
+                    starsHTML += "★"; // Arredondando visualmente para cheio se for > X.5
+                } else {
+                    starsHTML += "☆"; // Vazia
+                }
+            }
+            starsEl.innerText = starsHTML;
+        }
+
+        // --- Lógica de Filtros ---
+        const filterBtns = document.querySelectorAll('.filter-btn');
+        const loadMoreBtn = document.getElementById('btn-load-more');
+        const noReviewsMsg = document.getElementById('no-reviews-msg');
+
+        filterBtns.forEach(btn => {
+            btn.addEventListener('click', function() {
+                filterBtns.forEach(b => b.classList.remove('active'));
+                this.classList.add('active');
+                const filter = this.getAttribute('data-filter');
+                const cards = document.querySelectorAll('.review-card');
+                let visibleCount = 0;
+                cards.forEach(card => {
+                    let show = false;
+                    if (filter === 'all') show = true;
+                    else if (filter === 'photos' && card.getAttribute('data-has-photos') === 'true') show = true;
+                    else if (filter === 'verified' && card.getAttribute('data-verified') === 'true') show = true;
+                    else if (card.getAttribute('data-rating') === filter) show = true;
+                    if (show) { card.classList.remove('hidden'); card.style.animation = 'fadeInUp 0.5s ease'; visibleCount++; } 
+                    else { card.classList.add('hidden'); }
+                });
+                if (filter === 'all') { loadMoreBtn.style.display = 'inline-block'; } 
+                else { loadMoreBtn.style.display = 'none'; }
+                if (visibleCount === 0) { noReviewsMsg.style.display = 'block'; } 
+                else { noReviewsMsg.style.display = 'none'; }
+            });
+        });
+
+        // --- Inicializar Botões ---
+        function initializeCardButtons(scope) {
+            scope.querySelectorAll('.btn-like').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    this.classList.toggle('active');
+                    const icon = this.querySelector('i');
+                    let text = this.innerText; 
+                    let match = text.match(/\((\d+)\)/);
+                    let count = match ? parseInt(match[1]) : 0;
+                    if (this.classList.contains('active')) { icon.className = 'bi bi-hand-thumbs-up-fill'; count++; } 
+                    else { icon.className = 'bi bi-hand-thumbs-up'; count--; }
+                    this.innerHTML = `<i class="${icon.className}"></i> Útil (${count})`;
+                });
+            });
+            scope.querySelectorAll('.btn-comment').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    const card = this.closest('.review-card');
+                    card.querySelector('.comments-section').classList.toggle('open');
+                });
+            });
+            scope.querySelectorAll('.btn-post-comment').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    const wrapper = this.closest('.comment-input-wrapper');
+                    const input = wrapper.querySelector('.comment-input');
+                    const text = input.value.trim();
+                    const list = this.closest('.comments-section').querySelector('.posted-comments-list');
+                    if(text) {
+                        const commentDiv = document.createElement('div');
+                        commentDiv.className = 'posted-comment';
+                        commentDiv.innerHTML = `<div class="comment-avatar-small">Eu</div><div class="comment-content" style="flex-grow: 1;"><div style="font-weight: 700; font-size: 0.9rem;">Você</div><div style="font-size: 0.95rem;">${text}</div></div><button class="btn-delete-comment" title="Excluir comentário"><i class="bi bi-trash"></i></button>`;
+                        commentDiv.querySelector('.btn-delete-comment').addEventListener('click', function() { if(confirm("Excluir comentário?")) commentDiv.remove(); });
+                        list.appendChild(commentDiv);
+                        input.value = '';
+                    }
+                });
+            });
+            scope.querySelectorAll('.btn-share').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    const modal = document.getElementById('share-modal');
+                    const randomId = Math.random().toString(36).substring(7);
+                    const shareUrl = `https://lumina.beauty/review/${randomId}`;
+                    const shareText = "Confira esta avaliação na Lumina Beauty! ✨";
+                    document.getElementById('share-link-text').innerText = shareUrl;
+                    const encodedUrl = encodeURIComponent(shareUrl);
+                    const encodedText = encodeURIComponent(shareText);
+                    document.getElementById('share-whatsapp').href = `https://wa.me/?text=${encodedText}%20${encodedUrl}`;
+                    document.getElementById('share-x').href = `https://twitter.com/intent/tweet?url=${encodedUrl}&text=${encodedText}`;
+                    document.getElementById('share-facebook').href = `https://www.facebook.com/sharer/sharer.php?u=${encodedUrl}`;
+                    document.getElementById('share-email').href = `mailto:?subject=${encodedText}&body=Veja%20aqui:%20${encodedUrl}`;
+                    modal.style.display = 'flex';
+                });
+            });
+            scope.querySelectorAll('.review-image').forEach(img => {
+                img.addEventListener('click', function() {
+                    const modal = document.createElement('div');
+                    modal.style.cssText = `position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.9); z-index: 9999; display: flex; align-items: center; justify-content: center; cursor: pointer;`;
+                    const modalImg = document.createElement('img');
+                    modalImg.src = this.src;
+                    modalImg.style.cssText = 'max-width: 90%; max-height: 90%; border-radius: 10px;';
+                    modal.appendChild(modalImg);
+                    document.body.appendChild(modal);
+                    modal.addEventListener('click', () => modal.remove());
+                });
+            });
+        }
+
+        initializeCardButtons(document);
+
+        const shareModal = document.getElementById('share-modal');
+        const closeShareBtn = document.getElementById('close-share-modal');
+        if (closeShareBtn) closeShareBtn.addEventListener('click', () => { shareModal.style.display = 'none'; });
+        if (shareModal) shareModal.addEventListener('click', (e) => { if (e.target === shareModal) shareModal.style.display = 'none'; });
+
+        const btnCopy = document.getElementById('btn-copy-link');
+        if (btnCopy) {
+            btnCopy.addEventListener('click', function() {
+                const linkText = document.getElementById('share-link-text').innerText;
+                navigator.clipboard.writeText(linkText).then(() => {
+                    const originalText = this.innerText;
+                    this.classList.add('btn-copy-success');
+                    this.innerText = 'Copiado!';
+                    setTimeout(() => { this.innerText = originalText; this.classList.remove('btn-copy-success'); }, 2000);
+                });
+            });
+        }
+
+        // --- CARREGAR MAIS (GERA NOVO CARD E RECALCULA TUDO) ---
+        if (loadMoreBtn) {
+            loadMoreBtn.addEventListener('click', function() {
+                this.style.display = 'none';
+                document.getElementById('loading-spinner').style.display = 'block';
+
+                setTimeout(() => {
+                    document.getElementById('loading-spinner').style.display = 'none';
+                    this.style.display = 'inline-block';
+
+                    // Gerar dados aleatórios
+                    const nome = getRandomElement(randomNames);
+                    const produto = getRandomElement(randomProducts);
+                    const texto = getRandomElement(randomReviews);
+                    
+                    // TRUQUE: Gerar nota 3 ou 5 para forçar a média a mexer visivelmente
+                    const newReviewRating = Math.random() > 0.5 ? 5 : 3;
+                    
+                    const initialLikes = Math.floor(Math.random() * 50);
+                    const avatarLetter = nome.charAt(0);
+                    
+                    // Define estrelas do card individual
+                    let cardStars = '★★★☆☆';
+                    if (newReviewRating === 5) cardStars = '★★★★★';
+                    if (newReviewRating === 4) cardStars = '★★★★☆';
+
+                    const newReview = document.createElement('div');
+                    newReview.className = 'review-card';
+                    newReview.setAttribute('data-rating', newReviewRating.toString());
+                    newReview.setAttribute('data-has-photos', 'false');
+                    newReview.setAttribute('data-verified', 'true');
+                    
+                    newReview.innerHTML = `
+                        <div class="review-header">
+                            <div class="reviewer-info">
+                                <div class="reviewer-avatar">${avatarLetter}</div>
+                                <div class="reviewer-details">
+                                    <h5>${nome} <span class="verified-badge"><i class="bi bi-check-circle-fill"></i> Verificada</span></h5>
+                                    <span class="review-date">Agora mesmo</span>
+                                </div>
+                            </div>
+                            <div class="review-rating">${cardStars}</div>
+                        </div>
+                        <div class="review-product"><i class="bi bi-box-seam"></i> ${produto}</div>
+                        <p class="review-text">${texto}</p>
+                        <div class="review-footer">
+                            <button class="review-action btn-like"><i class="bi bi-hand-thumbs-up"></i> Útil (${initialLikes})</button>
+                            <button class="review-action btn-comment"><i class="bi bi-chat-dots"></i> Comentar</button>
+                            <button class="review-action btn-share"><i class="bi bi-share"></i> Compartilhar</button>
+                        </div>
+                        <div class="comments-section">
+                            <div class="posted-comments-list"></div>
+                            <div class="comment-input-wrapper">
+                                <input type="text" class="comment-input" placeholder="Adicione um comentário...">
+                                <button class="btn-post-comment">Enviar</button>
+                            </div>
+                        </div>
+                    `;
+
+                    document.querySelector('#reviews-container .col-12').appendChild(newReview);
+                    initializeCardButtons(newReview);
+                    newReview.scrollIntoView({ behavior: 'smooth', block: 'center' });
+
+                    // --- CHAMA A FUNÇÃO DE RECALCULO ---
+                    updateStatistics();
+
+                }, 1500);
+            });
+        }
+    });
+</script>
+
+{% endblock %}
