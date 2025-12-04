@@ -17,6 +17,7 @@
 
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin=""/>
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
 
@@ -1115,6 +1116,245 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 
 // ==========================================
+// ESC PARA DROPDOWN - VERSÃO CORRETA
+// ==========================================
+
+document.addEventListener('DOMContentLoaded', function() {
+    console.log('🔍 Procurando dropdown do usuário...');
+    
+    // Método 1: Pelo ID (mais seguro)
+    const toggleBtn = document.getElementById('navbarUserDropdown');
+    
+    if (!toggleBtn) {
+        console.error('❌ Botão dropdown não encontrado pelo ID #navbarUserDropdown');
+        // Método 2: Pela classe específica
+        const toggleBtnAlt = document.querySelector('.navbar-right-cluster .dropdown-toggle');
+        if (toggleBtnAlt) {
+            console.log('✅ Encontrado pelo seletor de classe:', toggleBtnAlt);
+            setupDropdown(toggleBtnAlt);
+        } else {
+            console.error('❌ Botão dropdown não encontrado de nenhuma forma');
+        }
+        return;
+    }
+    
+    console.log('✅ Botão encontrado:', toggleBtn);
+    setupDropdown(toggleBtn);
+});
+
+function setupDropdown(toggleBtn) {
+    // Encontra o menu dropdown (próximo elemento irmão)
+    const dropdownMenu = toggleBtn.nextElementSibling;
+    
+    if (!dropdownMenu || !dropdownMenu.classList.contains('dropdown-menu')) {
+        console.error('❌ Menu dropdown não encontrado próximo ao botão');
+        return;
+    }
+    
+    console.log('✅ Menu encontrado:', dropdownMenu);
+    
+    // Remove o data-bs-toggle para evitar conflito com Bootstrap
+    toggleBtn.removeAttribute('data-bs-toggle');
+    
+    // Variável para controlar estado
+    let isOpen = false;
+    
+    // Função para abrir dropdown
+    function openDropdown() {
+        console.log('📂 Abrindo dropdown');
+        
+        // Fecha outros dropdowns abertos
+        document.querySelectorAll('.dropdown-menu.show').forEach(menu => {
+            menu.classList.remove('show');
+            const btn = menu.previousElementSibling;
+            if (btn && btn.classList.contains('dropdown-toggle')) {
+                btn.setAttribute('aria-expanded', 'false');
+            }
+        });
+        
+        // Abre este dropdown
+        dropdownMenu.classList.add('show');
+        toggleBtn.setAttribute('aria-expanded', 'true');
+        isOpen = true;
+        
+        // Foca no primeiro item
+        setTimeout(() => {
+            const firstItem = dropdownMenu.querySelector('a, button');
+            if (firstItem) {
+                firstItem.focus();
+                console.log('🎯 Focado no primeiro item:', firstItem.textContent);
+            }
+        }, 100);
+    }
+    
+    // Função para fechar dropdown
+    function closeDropdown() {
+        console.log('📂 Fechando dropdown');
+        dropdownMenu.classList.remove('show');
+        toggleBtn.setAttribute('aria-expanded', 'false');
+        isOpen = false;
+    }
+    
+    // Função para alternar
+    function toggleDropdown() {
+        console.log('🔄 Alternando dropdown, estado atual:', isOpen ? 'aberto' : 'fechado');
+        if (isOpen) {
+            closeDropdown();
+        } else {
+            openDropdown();
+        }
+    }
+    
+    // 1. Clique no botão (sobrescreve comportamento do Bootstrap)
+    toggleBtn.addEventListener('click', function(e) {
+        console.log('🖱️ Clique detectado');
+        e.preventDefault();
+        e.stopImmediatePropagation(); // Importante: impede outros listeners
+        toggleDropdown();
+    }, true); // true = usa capturing phase para pegar antes do Bootstrap
+    
+    // 2. ESC para abrir/fechar
+    document.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape') {
+            console.log('⌨️ ESC pressionado');
+            console.log('Elemento focado:', document.activeElement);
+            console.log('Dropdown aberto?', isOpen);
+            
+            // Se dropdown está aberto, fecha
+            if (isOpen) {
+                console.log('🔴 Fechando dropdown aberto');
+                e.preventDefault();
+                closeDropdown();
+                toggleBtn.focus();
+                return;
+            }
+            
+            // Se o botão dropdown está focado, abre
+            if (document.activeElement === toggleBtn) {
+                console.log('🟢 Botão focado - abrindo dropdown');
+                e.preventDefault();
+                openDropdown();
+                return;
+            }
+            
+            // Se está dentro do dropdown, fecha
+            if (dropdownMenu.contains(document.activeElement)) {
+                console.log('🔴 Dentro do dropdown - fechando');
+                e.preventDefault();
+                closeDropdown();
+                toggleBtn.focus();
+                return;
+            }
+            
+            // Se nenhum dos casos acima, tenta focar no botão
+            console.log('🟡 Tentando focar no botão dropdown...');
+            
+            // Verifica se o botão está visível
+            const rect = toggleBtn.getBoundingClientRect();
+            const isVisible = rect.width > 0 && rect.height > 0 &&
+                             rect.top >= 0 &&
+                             rect.left >= 0 &&
+                             rect.bottom <= (window.innerHeight || document.documentElement.clientHeight) &&
+                             rect.right <= (window.innerWidth || document.documentElement.clientWidth);
+            
+            if (isVisible) {
+                console.log('🎯 Botão está visível - focando...');
+                toggleBtn.focus();
+            } else {
+                console.log('⚠️ Botão não está visível na tela');
+            }
+        }
+    }, true);
+    
+    // 3. Enter ou Espaço
+    toggleBtn.addEventListener('keydown', function(e) {
+        if (e.key === 'Enter' || e.key === ' ') {
+            console.log('⌨️ Enter/Space no botão');
+            e.preventDefault();
+            toggleDropdown();
+        }
+    }, true);
+    
+    // 4. Fecha ao clicar fora
+    document.addEventListener('click', function(e) {
+        if (isOpen && !toggleBtn.contains(e.target) && !dropdownMenu.contains(e.target)) {
+            console.log('🖱️ Clicando fora - fechando');
+            closeDropdown();
+        }
+    });
+    
+    // 5. Fecha ao selecionar item
+    dropdownMenu.querySelectorAll('a').forEach(item => {
+        item.addEventListener('click', function() {
+            console.log('🖱️ Clicando em item - fechando');
+            closeDropdown();
+        });
+    });
+    
+    // 6. Navegação por teclado
+    dropdownMenu.addEventListener('keydown', function(e) {
+        const items = Array.from(this.querySelectorAll('a'));
+        const currentIndex = items.indexOf(document.activeElement);
+        
+        switch(e.key) {
+            case 'ArrowDown':
+                e.preventDefault();
+                if (currentIndex < items.length - 1) {
+                    items[currentIndex + 1].focus();
+                } else {
+                    items[0].focus();
+                }
+                break;
+                
+            case 'ArrowUp':
+                e.preventDefault();
+                if (currentIndex > 0) {
+                    items[currentIndex - 1].focus();
+                } else {
+                    items[items.length - 1].focus();
+                }
+                break;
+                
+            case 'Escape':
+                e.preventDefault();
+                closeDropdown();
+                toggleBtn.focus();
+                break;
+                
+            case 'Tab':
+                if (e.shiftKey && currentIndex === 0) {
+                    // Shift+Tab no primeiro item fecha
+                    e.preventDefault();
+                    closeDropdown();
+                    toggleBtn.focus();
+                } else if (!e.shiftKey && currentIndex === items.length - 1) {
+                    // Tab no último item fecha
+                    e.preventDefault();
+                    closeDropdown();
+                    // O próximo elemento será focado automaticamente pelo navegador
+                }
+                break;
+        }
+    });
+    
+    console.log('✅ Dropdown configurado com sucesso!');
+    console.log('📋 Instruções:');
+    console.log('1. Use TAB para focar no ícone da pessoa');
+    console.log('2. Pressione ESC para abrir');
+    console.log('3. Pressione ESC novamente para fechar');
+    console.log('4. Use ↑↓ para navegar dentro do menu');
+    
+    // Adiciona um indicador visual para ajudar
+    toggleBtn.style.outline = '2px dashed #e8b8c2';
+    toggleBtn.style.outlineOffset = '2px';
+    
+    // Remove após alguns segundos
+    setTimeout(() => {
+        toggleBtn.style.outline = '';
+    }, 5000);
+}
+
+// ==========================================
 // 6. CARREGAR ALERTAS - FUNÇÃO AUXILIAR FLUTUANTE
 // ==========================================
 
@@ -1134,6 +1374,8 @@ function mostrarAlerta(mensagem, tipo = 'info') {
         return;
     }
 }
+
+
 
 
 document.addEventListener('DOMContentLoaded', function() {

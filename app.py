@@ -883,21 +883,22 @@ def excluir_produto(id):
     return redirect(url_for('admin_produtos'))
 
 @app.route('/admin/produtos/deletar-todos', methods=['POST'])
+@model.login_required(roles=['admin'])
 def deletar_todos_produtos():
-    if not verificar_admin():
-        flash('Acesso negado. Apenas administradores podem realizar esta ação.', 'danger')
-        return redirect(url_for('login'))
-    
     try:
-        # Deleta todos os produtos
-        produtos_deletados = Produto.query.delete()
-        db.session.commit()
+        # Conecta ao banco de dados
+        conn = model.get_db_connection()
         
-        flash(f'Todos os produtos ({produtos_deletados}) foram deletados com sucesso!', 'success')
+        # Deleta todos os produtos
+        conn.execute('DELETE FROM produtos')
+        conn.commit()
+        conn.close()
+        
+        flash('Todos os produtos foram deletados com sucesso!', 'success')
         
     except Exception as e:
-        db.session.rollback()
         flash(f'Erro ao deletar produtos: {str(e)}', 'danger')
+        print(f"Erro ao deletar produtos: {e}")
     
     return redirect(url_for('admin_produtos'))
 
